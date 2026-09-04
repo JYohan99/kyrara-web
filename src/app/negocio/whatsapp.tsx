@@ -22,10 +22,12 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
+  ToastAndroid,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -147,12 +149,12 @@ export default function WhatsAppConnectionScreen() {
       await Clipboard.setStringAsync(pairingCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
-      Alert.alert(
-        "¡Código copiado!",
-        `El código "${pairingCode}" se copió al portapapeles. Abre WhatsApp y pégalo en Dispositivos vinculados.`
-      );
+
+      if (Platform.OS === "android") {
+        ToastAndroid.show("¡Código copiado al portapapeles!", ToastAndroid.SHORT);
+      }
     } catch {
-      Alert.alert("Aviso", `Código: ${pairingCode}. Puedes seleccionarlo y copiarlo.`);
+      // Si falla el portapapeles nativo
     }
   };
 
