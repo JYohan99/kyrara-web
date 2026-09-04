@@ -99,15 +99,26 @@ export default function WhatsAppConnectionScreen() {
   // GENERAR CÓDIGO DE 8 DÍGITOS
   // --------------------------------------------------------------------------
   const handleGeneratePairingCode = async () => {
-    const cleanNumber = phone.replace(/[^0-9]/g, "");
-    if (!cleanNumber || cleanNumber.length < 8) {
+    let cleanNumber = phone.replace(/[^0-9]/g, "");
+
+    // Auto-formateo inteligente para números de Uruguay:
+    // 09X XXX XXX (9 dígitos) -> 5989X XXX XXX
+    if (cleanNumber.startsWith("09") && cleanNumber.length === 9) {
+      cleanNumber = "598" + cleanNumber.slice(1);
+    } else if (cleanNumber.startsWith("9") && cleanNumber.length === 8) {
+      // 9X XXX XXX (8 dígitos) -> 5989X XXX XXX
+      cleanNumber = "598" + cleanNumber;
+    }
+
+    if (cleanNumber.length < 10) {
       Alert.alert(
-        "Número requerido",
-        "Por favor ingresa tu número con código de país (ej. 59899123456)."
+        "Número incompleto",
+        "Por favor ingresa tu número con código de país (ej. 59893927667 o 093927667)."
       );
       return;
     }
 
+    setPhone(cleanNumber);
     setGeneratingCode(true);
     setPairingCode(null);
 
@@ -117,7 +128,10 @@ export default function WhatsAppConnectionScreen() {
         setPairingCode(res.code);
       }
     } catch (err: any) {
-      Alert.alert("Error", err.message || "No se pudo generar el código.");
+      Alert.alert(
+        "Aviso de vinculación",
+        err.message || "El servicio está reconectando con WhatsApp. Espera 3 segundos y presiona el botón nuevamente."
+      );
     } finally {
       setGeneratingCode(false);
     }
