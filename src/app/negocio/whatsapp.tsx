@@ -14,6 +14,7 @@ import {
   requestPairingCode,
   type WhatsAppStatus,
 } from "@/features/whatsapp/api";
+import * as Clipboard from "expo-clipboard";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -21,7 +22,6 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -43,6 +43,7 @@ export default function WhatsAppConnectionScreen() {
   // Formulario y código
   const [phone, setPhone] = useState("");
   const [pairingCode, setPairingCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"code" | "qr">("code");
   const [qrUrl, setQrUrl] = useState<string>(getWhatsAppQRUrl());
 
@@ -138,18 +139,20 @@ export default function WhatsAppConnectionScreen() {
   };
 
   // --------------------------------------------------------------------------
-  // ABRIR LA APP DE WHATSAPP DIRECTAMENTE
+  // COPIAR EL CÓDIGO AL PORTAPAPELES
   // --------------------------------------------------------------------------
-  const handleOpenWhatsApp = async () => {
-    const waUrl = "whatsapp://";
-    const canOpen = await Linking.canOpenURL(waUrl);
-    if (canOpen) {
-      await Linking.openURL(waUrl);
-    } else {
+  const handleCopyCode = async () => {
+    if (!pairingCode) return;
+    try {
+      await Clipboard.setStringAsync(pairingCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
       Alert.alert(
-        "WhatsApp no disponible",
-        "No pudimos abrir WhatsApp automáticamente. Por favor ábrelo manualmente desde tu pantalla de inicio."
+        "¡Código copiado!",
+        `El código "${pairingCode}" se copió al portapapeles. Abre WhatsApp y pégalo en Dispositivos vinculados.`
       );
+    } catch {
+      Alert.alert("Aviso", `Código: ${pairingCode}. Puedes seleccionarlo y copiarlo.`);
     }
   };
 
@@ -422,21 +425,22 @@ export default function WhatsAppConnectionScreen() {
                         Mantén presionado sobre el código para copiarlo.
                       </ThemedText>
 
-                      {/* BOTÓN PARA ABRIR WHATSAPP DIRECTAMENTE */}
+                      {/* BOTÓN PARA COPIAR EL CÓDIGO */}
                       <Pressable
-                        onPress={handleOpenWhatsApp}
+                        onPress={handleCopyCode}
                         style={({ pressed }) => [
-                          styles.btnWhatsApp,
+                          styles.btnCopy,
+                          copied && styles.btnCopySuccess,
                           pressed && styles.pressed,
                         ]}
                       >
                         <Ionicons
-                          name="logo-whatsapp"
+                          name={copied ? "checkmark-circle" : "copy-outline"}
                           size={18}
                           color="#fff"
                         />
-                        <ThemedText style={styles.btnWhatsAppText}>
-                          Abrir WhatsApp para vincular
+                        <ThemedText style={styles.btnCopyText}>
+                          {copied ? "¡Código copiado!" : "Copiar código"}
                         </ThemedText>
                       </Pressable>
 
@@ -746,19 +750,22 @@ const styles = StyleSheet.create({
     color: Palette.textMuted,
     marginBottom: Spacing.three,
   },
-  btnWhatsApp: {
+  btnCopy: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#25D366",
+    backgroundColor: Palette.primary,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: BorderRadius.md,
     width: "100%",
     marginBottom: Spacing.three,
   },
-  btnWhatsAppText: {
+  btnCopySuccess: {
+    backgroundColor: Palette.success,
+  },
+  btnCopyText: {
     color: "#fff",
     fontSize: 14,
     fontWeight: "700",
