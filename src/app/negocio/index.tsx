@@ -68,7 +68,7 @@ export default function NegocioScreen() {
         <View style={styles.content}>
           <View style={styles.headerTitleWrap}>
             <ThemedText style={styles.headerTitle}>
-              Panel de Administración
+              Configuración
             </ThemedText>
             <ThemedText style={styles.headerSubtitle}>
               Selecciona una opción para gestionar tu negocio:

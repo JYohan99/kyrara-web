@@ -85,15 +85,15 @@ export async function completeAppointment(id: string): Promise<void> {
   const res = await fetch(`${API_BASE_URL}/appointments/${id}/complete`, {
     method: "PATCH",
   });
-  if (!res.ok) {
-    const fallback = await fetch(`${API_BASE_URL}/appointments/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "COMPLETED" }),
-    });
-    if (!fallback.ok) {
-      console.warn("Backend no implementa /complete o PATCH /appointments/:id");
-    }
+  if (res.ok) return;
+
+  const fallback = await fetch(`${API_BASE_URL}/appointments/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "COMPLETED" }),
+  });
+  if (!fallback.ok) {
+    throw new Error("No se pudo marcar la cita como completada en el servidor");
   }
 }
 

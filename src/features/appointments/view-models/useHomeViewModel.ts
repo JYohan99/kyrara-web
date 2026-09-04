@@ -33,31 +33,34 @@ export function useHomeViewModel() {
         setServices(businessData.services);
         setTodayAppointments(appointments);
 
-        // Filtrar citas pendientes / en curso (no canceladas, no no_show, no completadas)
-        const pendingAppointments = appointments.filter(
-          (a) =>
-            a.status !== "CANCELLED" &&
-            a.status !== "NO_SHOW" &&
-            a.status !== "COMPLETED",
+        // Citas no canceladas ni ausentes
+        const validAppointments = appointments.filter(
+          (a) => a.status !== "CANCELLED" && a.status !== "NO_SHOW",
+        );
+
+        // Citas pendientes que aún no han sido completadas
+        const pendingAppointments = validAppointments.filter(
+          (a) => a.status !== "COMPLETED",
         );
 
         const now = new Date();
-        // 1. Buscar cita en curso
-        const current = pendingAppointments.find((a) => {
+
+        // 1. Buscar si hay una cita en el rango de hora actual (incluso si está completada)
+        const currentSlotApp = validAppointments.find((a) => {
           const start = new Date(`${a.date}T${a.start_time}:00`);
           const end = new Date(`${a.date}T${a.end_time}:00`);
           return now >= start && now < end;
         });
 
-        if (current) {
-          setActiveAppointment(current);
+        if (currentSlotApp) {
+          setActiveAppointment(currentSlotApp);
           setUpcomingAppointments(
             pendingAppointments.filter(
-              (a) => a.id !== current.id && a.start_time >= current.start_time,
+              (a) => a.id !== currentSlotApp.id && a.start_time >= currentSlotApp.start_time,
             ),
           );
         } else {
-          // 2. Si no hay cita en curso en este momento, tomar la próxima más cercana
+          // 2. Si no hay cita en curso en este momento exacto, tomar la próxima cita pendiente
           const nextUpcoming =
             pendingAppointments.find((a) => {
               const end = new Date(`${a.date}T${a.end_time}:00`);
@@ -72,7 +75,12 @@ export function useHomeViewModel() {
               ),
             );
           } else {
-            setActiveAppointment(null);
+            // 3. Si no hay citas pendientes, mantener la última completada si existe
+            const lastCompleted = validAppointments
+              .filter((a) => a.status === "COMPLETED")
+              .pop();
+
+            setActiveAppointment(lastCompleted ?? null);
             setUpcomingAppointments([]);
           }
         }
@@ -95,7 +103,12 @@ export function useHomeViewModel() {
               try {
                 setCompleting(true);
                 await completeAppointment(appointment.id);
-                // Actualizar inmediatamente estado local para avanzar a la próxima cita
+                // Actualizar inmediatamente estado local para reflejar "Completada" en el acto
+                setActiveAppointment((prev) =>
+                  prev && prev.id === appointment.id
+                    ? { ...prev, status: "COMPLETED" }
+                    : prev,
+                );
                 setTodayAppointments((prev) =>
                   prev.map((a) =>
                     a.id === appointment.id ? { ...a, status: "COMPLETED" } : a,
@@ -114,6 +127,16 @@ export function useHomeViewModel() {
     },
     [load],
   );
+
+  const handleAdvanceToNextAppointment = useCallback(() => {
+    if (upcomingAppointments.length > 0) {
+      const next = upcomingAppointments[0];
+      setActiveAppointment(next);
+      setUpcomingAppointments((prev) => prev.filter((a) => a.id !== next.id));
+    } else {
+      setActiveAppointment(null);
+    }
+  }, [upcomingAppointments]);
 
   useFocusEffect(
     useCallback(() => {
@@ -134,6 +157,7 @@ export function useHomeViewModel() {
     completing,
     refresh: load,
     handleCompleteAppointment,
+    handleAdvanceToNextAppointment,
     getDisplayStatus,
     getTimeRemainingText,
   };

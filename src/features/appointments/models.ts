@@ -56,16 +56,18 @@ export function getDisplayStatus(
   if (status === "PENDING_APPROVAL")
     return { label: "Pendiente", color: "#452600", textColor: Palette.warningLight };
   if (status === "NO_SHOW") return { label: "No asistió", color: "#2B2D31", textColor: Palette.textMuted };
+  if (status === "COMPLETED")
+    return { label: "Completada", color: "#003828", textColor: Palette.successLight };
 
   const now = new Date();
   const start = new Date(`${date}T${startTime}:00`);
   const end = new Date(`${date}T${endTime}:00`);
 
-  if (status === "COMPLETED" || now >= end) {
-    return { label: "Completada", color: "#003828", textColor: Palette.successLight };
-  }
   if (now >= start && now < end) {
     return { label: "En proceso", color: Palette.primaryDark, textColor: Palette.primaryLight };
+  }
+  if (now >= end) {
+    return { label: "Completada", color: "#003828", textColor: Palette.successLight };
   }
   return { label: "Confirmada", color: Palette.secondaryDark, textColor: Palette.secondaryLight };
 }

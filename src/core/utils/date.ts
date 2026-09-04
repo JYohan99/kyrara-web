@@ -37,7 +37,15 @@ export function getTimeRemainingText(
   date: string,
   startTime: string,
   endTime: string,
+  status?: string,
 ): string {
+  if (status === "COMPLETED") {
+    return "Finalizado";
+  }
+  if (status === "CANCELLED" || status === "NO_SHOW") {
+    return "";
+  }
+
   const now = new Date();
   const start = new Date(`${date}T${startTime}:00`);
   const end = new Date(`${date}T${endTime}:00`);

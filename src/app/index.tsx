@@ -32,6 +32,7 @@ export default function HomeScreen() {
     loading,
     completing,
     handleCompleteAppointment,
+    handleAdvanceToNextAppointment,
     getDisplayStatus,
     getTimeRemainingText,
   } = useHomeViewModel();
@@ -117,6 +118,7 @@ export default function HomeScreen() {
                           activeAppointment.date,
                           activeAppointment.start_time,
                           activeAppointment.end_time,
+                          activeAppointment.status,
                         );
 
                         return timeRemaining ? (
@@ -163,28 +165,70 @@ export default function HomeScreen() {
                       {activeAppointment.service_name}
                     </ThemedText>
 
-                    {/* Fila de acción: Botón Finalizar Servicio */}
+                    {/* Fila de acción: Botón Finalizar Servicio o Indicador de Completado */}
                     <View style={styles.bentoActionsRow}>
-                      <Pressable
-                        onPress={() => handleCompleteAppointment(activeAppointment)}
-                        disabled={completing}
-                        style={({ pressed }) => [
-                          styles.bentoActionBtn,
-                          completing && styles.btnDisabled,
-                          pressed && styles.pressed,
-                        ]}
-                      >
-                        {completing ? (
-                          <ActivityIndicator size="small" color="#ffffff" />
-                        ) : (
-                          <>
-                            <Ionicons name="checkmark-done" size={18} color="#ffffff" />
-                            <ThemedText style={styles.bentoActionBtnText}>
-                              Finalizar Servicio
-                            </ThemedText>
-                          </>
-                        )}
-                      </Pressable>
+                      {(() => {
+                        const displayStatus = getDisplayStatus(
+                          activeAppointment.date,
+                          activeAppointment.start_time,
+                          activeAppointment.end_time,
+                          activeAppointment.status,
+                        );
+                        const isCompleted =
+                          activeAppointment.status === "COMPLETED" ||
+                          displayStatus.label === "Completada";
+
+                        if (isCompleted) {
+                          return (
+                            <View style={styles.completedStatusWrap}>
+                              <View style={styles.completedBadgeRow}>
+                                <Ionicons name="checkmark-circle" size={18} color={Palette.success} />
+                                <ThemedText style={styles.completedBadgeText}>
+                                  Servicio completado
+                                </ThemedText>
+                              </View>
+
+                              {upcomingAppointments.length > 0 && (
+                                <Pressable
+                                  onPress={handleAdvanceToNextAppointment}
+                                  style={({ pressed }) => [
+                                    styles.nextAppointmentBtn,
+                                    pressed && styles.pressed,
+                                  ]}
+                                >
+                                  <ThemedText style={styles.nextAppointmentBtnText}>
+                                    Siguiente turno
+                                  </ThemedText>
+                                  <Ionicons name="arrow-forward" size={14} color={Palette.textPrimary} />
+                                </Pressable>
+                              )}
+                            </View>
+                          );
+                        }
+
+                        return (
+                          <Pressable
+                            onPress={() => handleCompleteAppointment(activeAppointment)}
+                            disabled={completing}
+                            style={({ pressed }) => [
+                              styles.bentoActionBtn,
+                              completing && styles.btnDisabled,
+                              pressed && styles.pressed,
+                            ]}
+                          >
+                            {completing ? (
+                              <ActivityIndicator size="small" color="#ffffff" />
+                            ) : (
+                              <>
+                                <Ionicons name="checkmark-done" size={18} color="#ffffff" />
+                                <ThemedText style={styles.bentoActionBtnText}>
+                                  Finalizar Servicio
+                                </ThemedText>
+                              </>
+                            )}
+                          </Pressable>
+                        );
+                      })()}
                     </View>
                   </View>
                 ) : (
@@ -478,6 +522,45 @@ const styles = StyleSheet.create({
   },
   btnDisabled: {
     opacity: 0.6,
+  },
+  completedStatusWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    gap: Spacing.two,
+  },
+  completedBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 56, 40, 0.4)",
+    borderColor: "rgba(52, 211, 153, 0.3)",
+    borderWidth: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: BorderRadius.lg,
+    gap: 6,
+  },
+  completedBadgeText: {
+    color: Palette.successLight,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  nextAppointmentBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Palette.surfaceContainerHigh,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Palette.borderSubtle,
+    gap: 6,
+  },
+  nextAppointmentBtnText: {
+    color: Palette.textPrimary,
+    fontSize: 13,
+    fontWeight: "600",
   },
   emptyNowCard: {
     flexDirection: "row",
