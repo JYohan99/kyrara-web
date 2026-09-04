@@ -41,6 +41,15 @@ export default function NegocioScreen() {
       iconBg: Palette.surfaceContainerHigh,
       tag: "Ajustes",
     },
+    {
+      href: "/negocio/whatsapp" as any,
+      title: "Conexión de WhatsApp",
+      subtitle: "Estado del bot, vincular con código de 8 dígitos o QR",
+      icon: "logo-whatsapp" as const,
+      iconColor: "#25D366",
+      iconBg: "rgba(37, 211, 102, 0.15)",
+      tag: "Bot",
+    },
   ];
 
   return (
