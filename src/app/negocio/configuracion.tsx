@@ -2,15 +2,11 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { BorderRadius, MaxContentWidth, Palette, Spacing } from "@/constants/theme";
 import {
-  registerForPushNotifications,
-  sendTestLocalNotification,
-} from "@/core/services/notificationService";
-import {
   OPCIONES_INTERVALO,
   useConfiguracionViewModel,
-} from "@/features/appointments/view-models/useConfiguracionViewModel";
+} from "@/features/appointments";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -39,6 +35,8 @@ export default function ConfiguracionScreen() {
     address,
     logoBase64,
     notifyUpcoming,
+    testingNotif,
+    syncingToken,
     setName,
     setPhone,
     setAddress,
@@ -47,53 +45,9 @@ export default function ConfiguracionScreen() {
     handleSelectMode,
     handleSelectInterval,
     handleToggleNotifyUpcoming,
+    handleTestNotification,
+    handleSyncPushToken,
   } = useConfiguracionViewModel();
-
-  // Estados locales para pruebas de notificación
-  const [testingNotif, setTestingNotif] = useState(false);
-  const [syncingToken, setSyncingToken] = useState(false);
-
-  // --------------------------------------------------------------------------
-  // DISPARAR NOTIFICACIÓN LOCAL DE PRUEBA
-  // --------------------------------------------------------------------------
-  const handleTestNotification = async () => {
-    setTestingNotif(true);
-    try {
-      await sendTestLocalNotification(
-        "💈 Kyrara Barber",
-        "¡Notificación de prueba recibida con éxito en tu teléfono!"
-      );
-    } catch {
-      Alert.alert("Error", "No se pudo enviar la notificación de prueba.");
-    } finally {
-      setTestingNotif(false);
-    }
-  };
-
-  // --------------------------------------------------------------------------
-  // VINCULAR TOKEN FCM DE GOOGLE FIREBASE CON EL BACKEND
-  // --------------------------------------------------------------------------
-  const handleSyncPushToken = async () => {
-    setSyncingToken(true);
-    try {
-      const res = await registerForPushNotifications();
-      if (res.success) {
-        Alert.alert(
-          "Teléfono Vinculado",
-          "Tu teléfono ha quedado registrado exitosamente en el servidor para recibir alertas de nuevas citas."
-        );
-      } else {
-        Alert.alert(
-          "No se pudo vincular",
-          res.error || "Asegúrate de tener concedidos los permisos de notificación."
-        );
-      }
-    } catch (err: any) {
-      Alert.alert("Error", err?.message || "Ocurrió un error al vincular el dispositivo.");
-    } finally {
-      setSyncingToken(false);
-    }
-  };
 
   return (
     <ThemedView style={styles.container}>

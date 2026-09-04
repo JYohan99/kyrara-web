@@ -1,5 +1,10 @@
 import { pickSquareImageAsBase64 } from "@/core/services/imagePickerService";
+import {
+  registerForPushNotifications,
+  sendTestLocalNotification,
+} from "@/core/services/notificationService";
 import { useEffect, useState } from "react";
+import { Alert } from "react-native";
 import {
   fetchBusiness,
   updateBusiness,
@@ -138,6 +143,48 @@ export function useConfiguracionViewModel() {
     }
   };
 
+  // --------------------------------------------------------------------------
+  // ACCIONES: NOTIFICACIONES PUSH Y PRUEBAS
+  // --------------------------------------------------------------------------
+  const [testingNotif, setTestingNotif] = useState(false);
+  const [syncingToken, setSyncingToken] = useState(false);
+
+  const handleTestNotification = async () => {
+    setTestingNotif(true);
+    try {
+      await sendTestLocalNotification(
+        "💈 Kyrara Barber",
+        "¡Notificación de prueba recibida con éxito en tu teléfono!"
+      );
+    } catch {
+      Alert.alert("Error", "No se pudo enviar la notificación de prueba.");
+    } finally {
+      setTestingNotif(false);
+    }
+  };
+
+  const handleSyncPushToken = async () => {
+    setSyncingToken(true);
+    try {
+      const res = await registerForPushNotifications();
+      if (res.success) {
+        Alert.alert(
+          "Teléfono Vinculado",
+          "Tu teléfono ha quedado registrado exitosamente en el servidor para recibir alertas de nuevas citas."
+        );
+      } else {
+        Alert.alert(
+          "No se pudo vincular",
+          res.error || "Asegúrate de tener concedidos los permisos de notificación."
+        );
+      }
+    } catch (err: any) {
+      Alert.alert("Error", err?.message || "Ocurrió un error al vincular el dispositivo.");
+    } finally {
+      setSyncingToken(false);
+    }
+  };
+
   return {
     business,
     loading,
@@ -148,6 +195,8 @@ export function useConfiguracionViewModel() {
     address,
     logoBase64,
     notifyUpcoming,
+    testingNotif,
+    syncingToken,
     setName,
     setPhone,
     setAddress,
@@ -156,5 +205,7 @@ export function useConfiguracionViewModel() {
     handleSelectMode,
     handleSelectInterval,
     handleToggleNotifyUpcoming,
+    handleTestNotification,
+    handleSyncPushToken,
   };
 }

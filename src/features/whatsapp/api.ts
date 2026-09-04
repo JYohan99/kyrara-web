@@ -1,11 +1,7 @@
 import { API_BASE_URL } from "@/config/api";
+import { WhatsAppStatus } from "./models";
 
-export interface WhatsAppStatus {
-  status: "open" | "connecting" | "close";
-  isRegistered: boolean;
-  hasQR: boolean;
-  qr?: string | null;
-}
+export type { WhatsAppStatus };
 
 /**
  * Consulta el estado de conexión actual del socket de WhatsApp en el backend.
