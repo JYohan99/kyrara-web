@@ -2,7 +2,7 @@ import { Platform } from "react-native";
 
 // URL de producción — el backend corriendo en Render, disponible siempre,
 // sin depender de que tu PC esté prendida.
-const PRODUCTION_URL = "https://kyrara-backend-piloto.onrender.com";
+const PRODUCTION_URL = "https://kyrara-backend.onrender.com";
 
 // Si en algún momento querés volver a apuntar al backend local para
 // desarrollar sin gastar el pool de conexiones de producción, cambiá esto a true.
