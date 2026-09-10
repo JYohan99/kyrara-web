@@ -15,28 +15,32 @@ self.addEventListener("push", (event) => {
   if (!event.data) return;
 
   try {
-    const payload = event.data.json();
+    let payload;
+    try {
+      payload = event.data.json();
+    } catch {
+      payload = { body: event.data.text() };
+    }
+
     const title = payload.title || "💈 Kyrara Barber";
     const options = {
       body: payload.body || "Nueva notificación de tu barbería",
-      icon: payload.icon || "/assets/images/icon.png",
-      badge: payload.badge || "/assets/images/icon.png",
-      vibrate: [200, 100, 200],
-      tag: payload.tag || "kyrara-alert",
-      renotify: true,
+      icon: payload.icon || "/icon.png",
+      badge: payload.badge || "/icon.png",
       data: payload.data || { url: "/" },
     };
 
-    event.waitUntil(self.registration.showNotification(title, options));
-  } catch (err) {
-    // Si el payload es texto plano
-    const text = event.data.text();
+    if (payload.tag) {
+      options.tag = payload.tag;
+    }
+
     event.waitUntil(
-      self.registration.showNotification("💈 Kyrara Barber", {
-        body: text,
-        icon: "/assets/images/icon.png",
+      self.registration.showNotification(title, options).catch((err) => {
+        console.error("[SW] Error al mostrar notificación:", err);
       })
     );
+  } catch (err) {
+    console.error("[SW] Error procesando push event:", err);
   }
 });
 

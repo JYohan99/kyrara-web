@@ -39,6 +39,7 @@ export default function ConfiguracionScreen() {
     testingNotif,
     syncingToken,
     isWebPushActive,
+    isDeviceSubscribed,
     setName,
     setPhone,
     setAddress,
@@ -240,8 +241,10 @@ export default function ConfiguracionScreen() {
             {/* ESTADO DE VINCULACIÓN DE NOTIFICACIONES */}
             <View
               style={{
-                backgroundColor: isWebPushActive ? "rgba(0, 209, 157, 0.08)" : "rgba(255, 179, 0, 0.08)",
-                borderColor: isWebPushActive ? Palette.secondary : "#ffb300",
+                backgroundColor: isDeviceSubscribed
+                  ? "rgba(0, 209, 157, 0.08)"
+                  : "rgba(255, 179, 0, 0.08)",
+                borderColor: isDeviceSubscribed ? Palette.secondary : "#ffb300",
                 borderWidth: 1,
                 borderRadius: 12,
                 padding: 12,
@@ -252,18 +255,28 @@ export default function ConfiguracionScreen() {
               }}
             >
               <Ionicons
-                name={isWebPushActive ? "checkmark-circle" : "alert-circle-outline"}
+                name={isDeviceSubscribed ? "checkmark-circle" : "alert-circle-outline"}
                 size={22}
-                color={isWebPushActive ? Palette.secondary : "#ffb300"}
+                color={isDeviceSubscribed ? Palette.secondary : "#ffb300"}
               />
               <View style={{ flex: 1 }}>
-                <ThemedText style={{ fontSize: 13, fontWeight: "700", color: isWebPushActive ? Palette.secondary : "#ffb300" }}>
-                  {isWebPushActive ? "Web Push: Dispositivo Vinculado" : "Web Push: Dispositivo No Vinculado"}
+                <ThemedText
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "700",
+                    color: isDeviceSubscribed ? Palette.secondary : "#ffb300",
+                  }}
+                >
+                  {isDeviceSubscribed
+                    ? "Este Dispositivo: ✅ Vinculado"
+                    : "Este Dispositivo: ⚠️ No Vinculado"}
                 </ThemedText>
                 <ThemedText style={{ fontSize: 11, color: Palette.textMuted, marginTop: 2 }}>
-                  {isWebPushActive
-                    ? "Tu navegador / iPhone está registrado para recibir notificaciones flotantes de nuevas citas."
-                    : "Presiona el botón 'Activar Notificaciones Push' para enlazar este teléfono."}
+                  {isDeviceSubscribed
+                    ? "Este navegador / iPhone está activo para recibir alertas flotantes al instante."
+                    : isWebPushActive
+                    ? "Hay dispositivos en el negocio, pero este teléfono/navegador aún no está registrado. Toca el botón verde abajo para recibir alertas aquí."
+                    : "Presiona 'Activar Notificaciones Push en este Dispositivo' para comenzar a recibir las alertas aquí."}
                 </ThemedText>
               </View>
             </View>

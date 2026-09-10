@@ -1,5 +1,6 @@
 import { pickSquareImageAsBase64 } from "@/core/services/imagePickerService";
 import {
+  isCurrentDeviceSubscribed,
   registerForPushNotifications,
   sendTestLocalNotification,
 } from "@/core/services/notificationService";
@@ -39,10 +40,17 @@ export function useConfiguracionViewModel() {
   // Estado del interruptor de alertas por WhatsApp al barbero
   const [notifyWhatsApp, setNotifyWhatsApp] = useState(true);
 
+  // Estado de si este dispositivo específico tiene la suscripción push activa en el navegador
+  const [isDeviceSubscribed, setIsDeviceSubscribed] = useState(false);
+
   // --------------------------------------------------------------------------
   // CARGA INICIAL DE DATOS
   // --------------------------------------------------------------------------
   useEffect(() => {
+    isCurrentDeviceSubscribed().then((active) => {
+      setIsDeviceSubscribed(active);
+    });
+
     fetchBusiness()
       .then((data) => {
         setBusiness(data.business);
@@ -200,6 +208,7 @@ export function useConfiguracionViewModel() {
     try {
       const res = await registerForPushNotifications();
       if (res.success) {
+        setIsDeviceSubscribed(true);
         try {
           const fresh = await fetchBusiness();
           setBusiness(fresh.business);
@@ -225,6 +234,7 @@ export function useConfiguracionViewModel() {
   return {
     business,
     isWebPushActive: !!business?.web_push_subscription,
+    isDeviceSubscribed,
     loading,
     saving,
     error,

@@ -100,8 +100,12 @@ export async function registerForPushNotifications(): Promise<PushRegistrationRe
   }
 
   try {
-    // 4. Asegurar que el Service Worker esté listo
-    const registration = await navigator.serviceWorker.ready;
+    // 4. Asegurar que el Service Worker esté registrado y listo
+    let registration = await navigator.serviceWorker.getRegistration();
+    if (!registration) {
+      registration = await navigator.serviceWorker.register("/sw.js");
+    }
+    await navigator.serviceWorker.ready;
 
     // 5. Obtener la clave pública VAPID del backend
     const vapidRes = await fetch(`${API_BASE_URL}/appointments/business/vapid-public-key`);
@@ -142,6 +146,23 @@ export async function registerForPushNotifications(): Promise<PushRegistrationRe
     const msg = err?.message || String(err);
     console.error("[WebPush] Error al registrar notificaciones:", msg);
     return { success: false, error: msg };
+  }
+}
+
+/**
+ * Comprueba si este dispositivo o navegador específico ya tiene una suscripción activa local.
+ */
+export async function isCurrentDeviceSubscribed(): Promise<boolean> {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+    return false;
+  }
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) return false;
+    const sub = await reg.pushManager.getSubscription();
+    return !!sub && Notification.permission === "granted";
+  } catch {
+    return false;
   }
 }
 
