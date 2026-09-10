@@ -104,6 +104,7 @@ export async function updateBusinessSettings(data: {
   slot_step_minutes?: number;
   booking_mode?: "auto" | "approval";
   notify_upcoming_appointments?: number | boolean;
+  notify_whatsapp?: number | boolean;
 }): Promise<Business> {
   const res = await fetch(`${API_BASE_URL}/appointments/business/settings`, {
     method: "PATCH",

@@ -35,6 +35,7 @@ export default function ConfiguracionScreen() {
     address,
     logoBase64,
     notifyUpcoming,
+    notifyWhatsApp,
     testingNotif,
     syncingToken,
     isWebPushActive,
@@ -46,6 +47,7 @@ export default function ConfiguracionScreen() {
     handleSelectMode,
     handleSelectInterval,
     handleToggleNotifyUpcoming,
+    handleToggleNotifyWhatsApp,
     handleTestNotification,
     handleSyncPushToken,
   } = useConfiguracionViewModel();
@@ -205,6 +207,33 @@ export default function ConfiguracionScreen() {
                 onValueChange={handleToggleNotifyUpcoming}
                 trackColor={{ false: Palette.surfaceContainerHigh, true: Palette.primary }}
                 thumbColor={notifyUpcoming ? Palette.secondary : "#888888"}
+              />
+            </View>
+
+            {/* SWITCH TOGGLE: ALERTAS POR WHATSAPP AL BARBERO */}
+            <View
+              style={[
+                styles.switchRow,
+                { borderTopWidth: 1, borderTopColor: Palette.borderSubtle, paddingTop: 12, marginTop: 4 },
+              ]}
+            >
+              <View style={styles.switchTextContainer}>
+                <View style={styles.switchTitleRow}>
+                  <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
+                  <ThemedText style={styles.switchTitle}>
+                    Alertas por WhatsApp
+                  </ThemedText>
+                </View>
+                <ThemedText style={styles.switchDescription}>
+                  Recibe un mensaje en tu WhatsApp personal cada vez que un cliente reserve una cita.
+                </ThemedText>
+              </View>
+
+              <Switch
+                value={notifyWhatsApp}
+                onValueChange={handleToggleNotifyWhatsApp}
+                trackColor={{ false: Palette.surfaceContainerHigh, true: "#25D366" }}
+                thumbColor={notifyWhatsApp ? "#ffffff" : "#888888"}
               />
             </View>
 

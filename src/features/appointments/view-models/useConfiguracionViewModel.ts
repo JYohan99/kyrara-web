@@ -36,6 +36,9 @@ export function useConfiguracionViewModel() {
   // Estado del interruptor de notificación (5 min antes del turno)
   const [notifyUpcoming, setNotifyUpcoming] = useState(true);
 
+  // Estado del interruptor de alertas por WhatsApp al barbero
+  const [notifyWhatsApp, setNotifyWhatsApp] = useState(true);
+
   // --------------------------------------------------------------------------
   // CARGA INICIAL DE DATOS
   // --------------------------------------------------------------------------
@@ -53,6 +56,12 @@ export function useConfiguracionViewModel() {
           data.business.notify_upcoming_appointments !== 0 &&
           data.business.notify_upcoming_appointments !== false;
         setNotifyUpcoming(isNotifyActive);
+
+        // Si notify_whatsapp es 0 o false está apagado, por defecto encendido (1)
+        const isWhatsAppActive =
+          data.business.notify_whatsapp !== 0 &&
+          data.business.notify_whatsapp !== false;
+        setNotifyWhatsApp(isWhatsAppActive);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -144,6 +153,22 @@ export function useConfiguracionViewModel() {
   };
 
   // --------------------------------------------------------------------------
+  // ACCIONES: ACTIVAR / DESACTIVAR ALERTAS POR WHATSAPP AL BARBERO
+  // --------------------------------------------------------------------------
+  const handleToggleNotifyWhatsApp = async (value: boolean) => {
+    setNotifyWhatsApp(value);
+    try {
+      const updated = await updateBusinessSettings({
+        notify_whatsapp: value ? 1 : 0,
+      });
+      setBusiness(updated);
+    } catch (e: any) {
+      setError(e.message);
+      setNotifyWhatsApp(!value); // Revertir en caso de error
+    }
+  };
+
+  // --------------------------------------------------------------------------
   // ACCIONES: NOTIFICACIONES PUSH Y PRUEBAS
   // --------------------------------------------------------------------------
   const [testingNotif, setTestingNotif] = useState(false);
@@ -208,6 +233,7 @@ export function useConfiguracionViewModel() {
     address,
     logoBase64,
     notifyUpcoming,
+    notifyWhatsApp,
     testingNotif,
     syncingToken,
     setName,
@@ -218,6 +244,7 @@ export function useConfiguracionViewModel() {
     handleSelectMode,
     handleSelectInterval,
     handleToggleNotifyUpcoming,
+    handleToggleNotifyWhatsApp,
     handleTestNotification,
     handleSyncPushToken,
   };
