@@ -19,6 +19,7 @@ export type Business = {
    * Indica si está activa la notificación de alerta 5 minutos antes de cada turno.
    */
   notify_upcoming_appointments?: number | boolean;
+  web_push_subscription?: string | null;
 };
 
 /**

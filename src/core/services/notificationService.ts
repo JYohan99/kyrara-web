@@ -114,8 +114,7 @@ export async function registerForPushNotifications(): Promise<PushRegistrationRe
     }
 
     // 6. Suscribir el navegador al Push Service de Apple / Google
-    const existingSubscription = await registration.pushManager.getSubscription();
-    let subscription = existingSubscription;
+    let subscription = await registration.pushManager.getSubscription();
 
     if (!subscription) {
       subscription = await registration.pushManager.subscribe({
@@ -124,11 +123,13 @@ export async function registerForPushNotifications(): Promise<PushRegistrationRe
       });
     }
 
+    const subJson = subscription.toJSON ? subscription.toJSON() : subscription;
+
     // 7. Enviar la suscripción al backend de Kyrara
     const saveRes = await fetch(`${API_BASE_URL}/appointments/business/web-push-subscription`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subscription }),
+      body: JSON.stringify({ subscription: subJson }),
     });
 
     if (!saveRes.ok) {
@@ -149,15 +150,7 @@ export async function registerForPushNotifications(): Promise<PushRegistrationRe
  */
 export async function sendTestLocalNotification(title: string, body: string): Promise<{ success: boolean; message?: string }> {
   try {
-    // 1. Mostrar notificación visual inmediata en el navegador si hay permiso
-    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-      new Notification(title, {
-        body,
-        icon: "/assets/images/icon.png",
-      });
-    }
-
-    // 2. Disparar endpoint de prueba del servidor (Web Push + WhatsApp)
+    // Disparar endpoint de prueba del servidor (Web Push a la pantalla + WhatsApp al teléfono)
     const res = await fetch(`${API_BASE_URL}/appointments/business/test-push`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -175,6 +175,11 @@ export function useConfiguracionViewModel() {
     try {
       const res = await registerForPushNotifications();
       if (res.success) {
+        try {
+          const fresh = await fetchBusiness();
+          setBusiness(fresh.business);
+        } catch {}
+
         Alert.alert(
           "¡Dispositivo Vinculado!",
           "Este dispositivo (iPhone / Navegador) ha quedado registrado con éxito para recibir alertas Web Push cuando entren nuevas citas."
@@ -194,6 +199,7 @@ export function useConfiguracionViewModel() {
 
   return {
     business,
+    isWebPushActive: !!business?.web_push_subscription,
     loading,
     saving,
     error,
