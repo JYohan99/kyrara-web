@@ -1,0 +1,18 @@
+{
+  "name": "Kyrara Barber Club",
+  "short_name": "Kyrara",
+  "description": "Sistema de gestión de turnos y barbería Kyrara",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#101415",
+  "theme_color": "#101415",
+  "icons": [
+    {
+      "src": "/assets/images/icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

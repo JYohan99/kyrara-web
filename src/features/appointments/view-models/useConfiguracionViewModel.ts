@@ -152,12 +152,19 @@ export function useConfiguracionViewModel() {
   const handleTestNotification = async () => {
     setTestingNotif(true);
     try {
-      await sendTestLocalNotification(
+      const res = await sendTestLocalNotification(
         "💈 Kyrara Barber",
-        "¡Notificación de prueba recibida con éxito en tu teléfono!"
+        "¡Notificación de prueba recibida con éxito en tu pantalla!"
       );
-    } catch {
-      Alert.alert("Error", "No se pudo enviar la notificación de prueba.");
+      Alert.alert(
+        "Alerta de Prueba",
+        res.message || "Prueba completada: Se envió la alerta a tu dispositivo y a tu WhatsApp."
+      );
+    } catch (err: any) {
+      Alert.alert(
+        "Error en la prueba",
+        err?.message || "No se pudo enviar la alerta de prueba. Verifica tu conexión o vincula el dispositivo primero."
+      );
     } finally {
       setTestingNotif(false);
     }
@@ -169,13 +176,13 @@ export function useConfiguracionViewModel() {
       const res = await registerForPushNotifications();
       if (res.success) {
         Alert.alert(
-          "Teléfono Vinculado",
-          "Tu teléfono ha quedado registrado exitosamente en el servidor para recibir alertas de nuevas citas."
+          "¡Dispositivo Vinculado!",
+          "Este dispositivo (iPhone / Navegador) ha quedado registrado con éxito para recibir alertas Web Push cuando entren nuevas citas."
         );
       } else {
         Alert.alert(
-          "No se pudo vincular",
-          res.error || "Asegúrate de tener concedidos los permisos de notificación."
+          "Configuración de Notificaciones",
+          res.error || "Asegúrate de permitir las notificaciones en tu navegador."
         );
       }
     } catch (err: any) {

@@ -9,7 +9,6 @@
     "userInterfaceStyle": "automatic",
     "android": {
       "package": "com.anonymous.Kyraraapp",
-      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#101415",
         "foregroundImage": "./assets/images/android-icon-foreground.png"

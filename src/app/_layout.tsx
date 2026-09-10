@@ -5,7 +5,7 @@ import { useColorScheme } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import AppTabs from "@/components/app-tabs";
-import { registerForPushNotifications } from "@/core/services/notificationService";
+import { registerServiceWorker } from "@/core/services/notificationService";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -14,7 +14,7 @@ export default function TabLayout() {
 
   useEffect(() => {
     SplashScreen.hideAsync();
-    registerForPushNotifications();
+    registerServiceWorker();
   }, []);
 
   return (

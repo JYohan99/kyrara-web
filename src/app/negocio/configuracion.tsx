@@ -182,7 +182,7 @@ export default function ConfiguracionScreen() {
               <ThemedText style={styles.sectionTitle}>Notificaciones y Alertas</ThemedText>
             </View>
             <ThemedText style={styles.sectionDescription}>
-              Configura cómo y cuándo deseas recibir alertas automáticas en tu móvil.
+              Configura cómo y cuándo deseas recibir alertas automáticas en tu iPhone, PC o WhatsApp.
             </ThemedText>
 
             {/* SWITCH TOGGLE: RECORDATORIO 5 MIN ANTES DEL TURNO */}
@@ -195,7 +195,7 @@ export default function ConfiguracionScreen() {
                   </ThemedText>
                 </View>
                 <ThemedText style={styles.switchDescription}>
-                  Recibe una alerta automática en tu teléfono cuando falten 5 minutos para comenzar cada cita.
+                  Recibe una alerta automática cuando falten 5 minutos para comenzar cada cita.
                 </ThemedText>
               </View>
 
@@ -224,7 +224,7 @@ export default function ConfiguracionScreen() {
                   <>
                     <Ionicons name="volume-high-outline" size={18} color={Palette.secondary} />
                     <ThemedText style={styles.notifBtnSecondaryText}>
-                      Probar Alerta en este Dispositivo
+                      Enviar Alerta de Prueba (Push y WhatsApp)
                     </ThemedText>
                   </>
                 )}
@@ -243,9 +243,9 @@ export default function ConfiguracionScreen() {
                   <ActivityIndicator size="small" color="#ffffff" />
                 ) : (
                   <>
-                    <Ionicons name="sync-outline" size={18} color="#ffffff" />
+                    <Ionicons name="notifications-outline" size={18} color="#ffffff" />
                     <ThemedText style={styles.notifBtnPrimaryText}>
-                      Vincular Teléfono para Alertas de WhatsApp
+                      Activar Notificaciones Push en este Dispositivo
                     </ThemedText>
                   </>
                 )}

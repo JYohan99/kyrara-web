@@ -1,139 +1,176 @@
 import { API_BASE_URL } from "@/config/api";
-import Constants from "expo-constants";
-import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
-
-const isExpoGo = Constants.appOwnership === "expo";
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
 
 export type PushRegistrationResult = {
   success: boolean;
   token?: string;
   error?: string;
+  isIosInstructionNeeded?: boolean;
 };
 
-export async function registerForPushNotifications(): Promise<PushRegistrationResult> {
-  if (isExpoGo) {
-    return {
-      success: false,
-      error: "Las notificaciones remotas requieren un APK / build independiente (no Expo Go).",
-    };
+/**
+ * Convierte una clave VAPID pública en base64 a BufferSource requerido por el navegador.
+ */
+function urlB64ToUint8Array(base64String: string): BufferSource {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const buffer = new ArrayBuffer(rawData.length);
+  const outputArray = new Uint8Array(buffer);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
   }
+  return outputArray as unknown as BufferSource;
+}
 
-  if (!Device.isDevice) {
-    return {
-      success: false,
-      error: "Las notificaciones push requieren un dispositivo físico real.",
-    };
-  }
+/**
+ * Detecta si el dispositivo actual es un iPhone / iPad.
+ */
+export function isIos(): boolean {
+  if (typeof window === "undefined" || !navigator) return false;
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
 
-  if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "Citas y Alertas Kyrara",
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#8A4FFF",
-      sound: "default",
-    });
-  }
+/**
+ * Detecta si la web se está ejecutando instalada como PWA (pantalla completa).
+ */
+export function isPwaInstalled(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (navigator as any).standalone === true
+  );
+}
 
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
-
-  if (existingStatus !== "granted") {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
-  }
-
-  if (finalStatus !== "granted") {
-    return {
-      success: false,
-      error: "Permiso de notificaciones denegado en el sistema del teléfono.",
-    };
-  }
+/**
+ * Registra silenciosamente el Service Worker de Kyrara en segundo plano.
+ */
+export async function registerServiceWorker(): Promise<void> {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 
   try {
-    let token: string | undefined;
-
-    try {
-      const deviceToken = await Notifications.getDevicePushTokenAsync();
-      token = deviceToken.data;
-    } catch {
-      const projectId =
-        Constants.expoConfig?.extra?.eas?.projectId ??
-        Constants.easConfig?.projectId;
-
-      const tokenData = await Notifications.getExpoPushTokenAsync(
-        projectId ? { projectId } : undefined,
-      );
-      token = tokenData.data;
-    }
-
-    if (!token) {
-      return {
-        success: false,
-        error: "No se pudo generar el token de notificaciones del dispositivo.",
-      };
-    }
-
-    const res = await fetch(`${API_BASE_URL}/appointments/business/push-token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    });
-
-    if (!res.ok) {
-      return {
-        success: false,
-        token,
-        error: `Servidor respondió con error HTTP ${res.status}`,
-      };
-    }
-
-    console.log("Token de notificaciones registrado exitosamente:", token);
-    return { success: true, token };
-  } catch (err: any) {
-    const errorMessage = err?.message || String(err);
-    console.error("No se pudo registrar el token de notificaciones:", errorMessage);
-    return {
-      success: false,
-      error: errorMessage,
-    };
+    await navigator.serviceWorker.register("/sw.js");
+    console.log("[ServiceWorker] /sw.js registrado exitosamente.");
+  } catch (err) {
+    console.warn("[ServiceWorker] No se pudo registrar /sw.js:", err);
   }
 }
 
-export async function sendTestLocalNotification(title: string, body: string) {
+/**
+ * Solicita permisos de notificación al usuario y suscribe el dispositivo a Web Push (VAPID).
+ */
+export async function registerForPushNotifications(): Promise<PushRegistrationResult> {
+  if (typeof window === "undefined") {
+    return { success: false, error: "Entorno no compatible con navegador." };
+  }
+
+  // 1. Verificación para iPhone (iOS)
+  if (isIos() && !isPwaInstalled()) {
+    return {
+      success: false,
+      isIosInstructionNeeded: true,
+      error:
+        "Para recibir alertas en tu iPhone:\n\n1. Toca el botón Compartir de Safari (ícono con flecha arriba).\n2. Selecciona 'Agregar a pantalla de inicio'.\n3. Abre la app desde tu pantalla de inicio y activa las alertas.",
+    };
+  }
+
+  // 2. Verificar soporte de Service Worker y Push
+  if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+    return {
+      success: false,
+      error:
+        "Tu navegador no tiene habilitadas las notificaciones Web Push. Asegúrate de usar Safari, Chrome o Edge actualizado.",
+    };
+  }
+
+  // 3. Solicitar permiso explícito al usuario
+  let permission = Notification.permission;
+  if (permission !== "granted") {
+    permission = await Notification.requestPermission();
+  }
+
+  if (permission !== "granted") {
+    return {
+      success: false,
+      error: "Permiso de notificaciones denegado en el navegador.",
+    };
+  }
+
   try {
-    if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "Citas y Alertas Kyrara",
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#8A4FFF",
-        sound: "default",
+    // 4. Asegurar que el Service Worker esté listo
+    const registration = await navigator.serviceWorker.ready;
+
+    // 5. Obtener la clave pública VAPID del backend
+    const vapidRes = await fetch(`${API_BASE_URL}/appointments/business/vapid-public-key`);
+    if (!vapidRes.ok) {
+      throw new Error("No se pudo obtener la clave VAPID pública del servidor.");
+    }
+    const { publicKey } = await vapidRes.json();
+    if (!publicKey) {
+      throw new Error("El servidor no tiene configurada una clave VAPID pública.");
+    }
+
+    // 6. Suscribir el navegador al Push Service de Apple / Google
+    const existingSubscription = await registration.pushManager.getSubscription();
+    let subscription = existingSubscription;
+
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlB64ToUint8Array(publicKey),
       });
     }
 
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title,
-        body,
-        sound: "default",
-        priority: Notifications.AndroidNotificationPriority.MAX,
-      },
-      trigger: null, // Inmediata
+    // 7. Enviar la suscripción al backend de Kyrara
+    const saveRes = await fetch(`${API_BASE_URL}/appointments/business/web-push-subscription`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subscription }),
     });
-  } catch (err) {
-    console.error("Error enviando notificación local de prueba:", err);
+
+    if (!saveRes.ok) {
+      throw new Error(`El servidor respondió con código ${saveRes.status} al guardar suscripción.`);
+    }
+
+    console.log("[WebPush] Suscripción registrada y guardada exitosamente en el backend.");
+    return { success: true };
+  } catch (err: any) {
+    const msg = err?.message || String(err);
+    console.error("[WebPush] Error al registrar notificaciones:", msg);
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Dispara una alerta de prueba dual desde el servidor (Web Push + WhatsApp).
+ */
+export async function sendTestLocalNotification(title: string, body: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    // 1. Mostrar notificación visual inmediata en el navegador si hay permiso
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+      new Notification(title, {
+        body,
+        icon: "/assets/images/icon.png",
+      });
+    }
+
+    // 2. Disparar endpoint de prueba del servidor (Web Push + WhatsApp)
+    const res = await fetch(`${API_BASE_URL}/appointments/business/test-push`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || `Error del servidor HTTP ${res.status}`);
+    }
+
+    return { success: true, message: data.message };
+  } catch (err: any) {
+    console.error("[TestPush] Error enviando prueba:", err);
+    throw err;
   }
 }
