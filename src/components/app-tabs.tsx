@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Palette } from "@/constants/theme";
@@ -7,6 +8,7 @@ import { Palette } from "@/constants/theme";
 export default function AppTabs() {
   const insets = useSafeAreaInsets();
   const bottomInset = insets.bottom;
+  const isWeb = Platform.OS === "web";
 
   return (
     <Tabs
@@ -19,13 +21,20 @@ export default function AppTabs() {
           backgroundColor: Palette.background,
           borderTopColor: Palette.borderSubtle,
           borderTopWidth: 1,
-          height: 60 + bottomInset,
-          paddingBottom: Math.max(bottomInset, 8),
-          paddingTop: 8,
+          height: isWeb ? 70 : 62 + bottomInset,
+          paddingTop: 6,
+          paddingBottom: isWeb ? 8 : Math.max(bottomInset, 6),
+        },
+        tabBarItemStyle: {
+          justifyContent: "center",
+          alignItems: "center",
+          paddingVertical: 2,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: "600",
+          marginTop: 1,
+          marginBottom: 2,
         },
       }}
     >
@@ -33,8 +42,8 @@ export default function AppTabs() {
         name="index"
         options={{
           title: "Inicio",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="home-outline" color={color} size={22} />
           ),
         }}
       />
@@ -42,8 +51,8 @@ export default function AppTabs() {
         name="reservas"
         options={{
           title: "Reservas",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="calendar-outline" color={color} size={22} />
           ),
         }}
       />
@@ -51,8 +60,8 @@ export default function AppTabs() {
         name="clientes"
         options={{
           title: "Clientes",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="people-outline" color={color} size={22} />
           ),
         }}
       />
@@ -60,8 +69,8 @@ export default function AppTabs() {
         name="negocio"
         options={{
           title: "Negocio",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="storefront-outline" color={color} size={size} />
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="storefront-outline" color={color} size={22} />
           ),
         }}
       />
