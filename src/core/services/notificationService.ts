@@ -167,6 +167,42 @@ export async function isCurrentDeviceSubscribed(): Promise<boolean> {
 }
 
 /**
+ * Desuscribe este dispositivo de Web Push en el navegador y en el backend.
+ */
+export async function unsubscribeFromPushNotifications(): Promise<{ success: boolean; error?: string }> {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+    return { success: false, error: "Navegador no compatible." };
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) return { success: true };
+
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      const endpoint = sub.endpoint;
+      await sub.unsubscribe();
+
+      // Notificar al backend para remover este endpoint del registro de la barbería
+      try {
+        await fetch(`${API_BASE_URL}/appointments/business/web-push-subscription`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint }),
+        });
+      } catch (e) {
+        console.warn("[WebPush] No se pudo notificar al backend de la desuscripción:", e);
+      }
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("[WebPush] Error al desuscribir dispositivo:", err);
+    return { success: false, error: err?.message || String(err) };
+  }
+}
+
+/**
  * Dispara una alerta de prueba dual desde el servidor (Web Push + WhatsApp).
  */
 export async function sendTestLocalNotification(title: string, body: string): Promise<{ success: boolean; message?: string }> {

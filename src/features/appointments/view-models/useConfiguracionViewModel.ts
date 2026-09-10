@@ -3,6 +3,7 @@ import {
   isCurrentDeviceSubscribed,
   registerForPushNotifications,
   sendTestLocalNotification,
+  unsubscribeFromPushNotifications,
 } from "@/core/services/notificationService";
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
@@ -206,26 +207,47 @@ export function useConfiguracionViewModel() {
   const handleSyncPushToken = async () => {
     setSyncingToken(true);
     try {
-      const res = await registerForPushNotifications();
-      if (res.success) {
-        setIsDeviceSubscribed(true);
-        try {
-          const fresh = await fetchBusiness();
-          setBusiness(fresh.business);
-        } catch {}
+      if (isDeviceSubscribed) {
+        const res = await unsubscribeFromPushNotifications();
+        if (res.success) {
+          setIsDeviceSubscribed(false);
+          try {
+            const fresh = await fetchBusiness();
+            setBusiness(fresh.business);
+          } catch {}
 
-        Alert.alert(
-          "¡Dispositivo Vinculado!",
-          "Este dispositivo (iPhone / Navegador) ha quedado registrado con éxito para recibir alertas Web Push cuando entren nuevas citas."
-        );
+          Alert.alert(
+            "Notificaciones Desactivadas",
+            "Este dispositivo ya no recibirá notificaciones flotantes de nuevas citas."
+          );
+        } else {
+          Alert.alert(
+            "Configuración de Notificaciones",
+            res.error || "No se pudieron desactivar las notificaciones en este dispositivo."
+          );
+        }
       } else {
-        Alert.alert(
-          "Configuración de Notificaciones",
-          res.error || "Asegúrate de permitir las notificaciones en tu navegador."
-        );
+        const res = await registerForPushNotifications();
+        if (res.success) {
+          setIsDeviceSubscribed(true);
+          try {
+            const fresh = await fetchBusiness();
+            setBusiness(fresh.business);
+          } catch {}
+
+          Alert.alert(
+            "¡Dispositivo Vinculado!",
+            "Este dispositivo (iPhone / Navegador) ha quedado registrado con éxito para recibir alertas Web Push cuando entren nuevas citas."
+          );
+        } else {
+          Alert.alert(
+            "Configuración de Notificaciones",
+            res.error || "Asegúrate de permitir las notificaciones en tu navegador."
+          );
+        }
       }
     } catch (err: any) {
-      Alert.alert("Error", err?.message || "Ocurrió un error al vincular el dispositivo.");
+      Alert.alert("Error", err?.message || "Ocurrió un error al cambiar la configuración de notificaciones.");
     } finally {
       setSyncingToken(false);
     }

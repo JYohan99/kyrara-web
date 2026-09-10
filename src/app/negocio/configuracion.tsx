@@ -273,30 +273,39 @@ export default function ConfiguracionScreen() {
                   {isDeviceSubscribed
                     ? "Este navegador / iPhone está activo para recibir alertas flotantes al instante."
                     : isWebPushActive
-                      ? "Hay dispositivos en el negocio, pero este teléfono/navegador aún no está registrado. Toca el botón verde abajo para recibir alertas aquí."
-                      : "Presiona 'Activar Notificaciones Push en este Dispositivo' para comenzar a recibir las alertas aquí."}
+                      ? "Hay dispositivos en el negocio, pero este teléfono/navegador aún no está registrado. Toca el botón abajo para recibir alertas aquí."
+                      : "Presiona 'Activar Notificaciones' para comenzar a recibir las alertas aquí."}
                 </ThemedText>
               </View>
             </View>
 
-            {/* BOTÓN DE VINCULACIÓN */}
+            {/* BOTÓN DE VINCULACIÓN / DESVINCULACIÓN */}
             <View style={styles.notifBtnGroup}>
               <Pressable
                 onPress={handleSyncPushToken}
                 disabled={syncingToken}
                 style={({ pressed }) => [
-                  styles.notifBtnPrimary,
+                  isDeviceSubscribed ? styles.notifBtnDanger : styles.notifBtnPrimary,
                   syncingToken && styles.btnDisabled,
                   pressed && styles.pressed,
                 ]}
               >
                 {syncingToken ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
+                  <ActivityIndicator size="small" color={isDeviceSubscribed ? "#ff5252" : "#ffffff"} />
                 ) : (
                   <>
-                    <Ionicons name="notifications-outline" size={18} color="#ffffff" />
-                    <ThemedText style={styles.notifBtnPrimaryText}>
-                      Activar Notificaciones
+                    <Ionicons
+                      name={isDeviceSubscribed ? "notifications-off-outline" : "notifications-outline"}
+                      size={18}
+                      color={isDeviceSubscribed ? "#ff5252" : "#ffffff"}
+                    />
+                    <ThemedText
+                      style={[
+                        styles.notifBtnPrimaryText,
+                        isDeviceSubscribed && styles.notifBtnDangerText,
+                      ]}
+                    >
+                      {isDeviceSubscribed ? "Desactivar Notificaciones" : "Activar Notificaciones"}
                     </ThemedText>
                   </>
                 )}
@@ -619,6 +628,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#ffffff",
+  },
+  notifBtnDanger: {
+    backgroundColor: "rgba(255, 82, 82, 0.08)",
+    borderWidth: 1,
+    borderColor: "#ff5252",
+    borderRadius: BorderRadius.md,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.three,
+    gap: Spacing.two,
+  },
+  notifBtnDangerText: {
+    color: "#ff5252",
   },
   modeOptionsContainer: {
     gap: Spacing.two,
