@@ -36,7 +36,6 @@ export default function ConfiguracionScreen() {
     logoBase64,
     notifyUpcoming,
     notifyWhatsApp,
-    testingNotif,
     syncingToken,
     isWebPushActive,
     isDeviceSubscribed,
@@ -49,7 +48,6 @@ export default function ConfiguracionScreen() {
     handleSelectInterval,
     handleToggleNotifyUpcoming,
     handleToggleNotifyWhatsApp,
-    handleTestNotification,
     handleSyncPushToken,
   } = useConfiguracionViewModel();
 
@@ -186,7 +184,7 @@ export default function ConfiguracionScreen() {
               <ThemedText style={styles.sectionTitle}>Notificaciones y Alertas</ThemedText>
             </View>
             <ThemedText style={styles.sectionDescription}>
-              Configura cómo y cuándo deseas recibir alertas automáticas en tu iPhone, PC o WhatsApp.
+              Configura cómo y cuándo deseas recibir alertas automáticas.
             </ThemedText>
 
             {/* SWITCH TOGGLE: RECORDATORIO 5 MIN ANTES DEL TURNO */}
@@ -195,7 +193,7 @@ export default function ConfiguracionScreen() {
                 <View style={styles.switchTitleRow}>
                   <Ionicons name="alarm-outline" size={16} color={Palette.secondary} />
                   <ThemedText style={styles.switchTitle}>
-                    Aviso 5 minutos antes del turno
+                    Aviso 5 min
                   </ThemedText>
                 </View>
                 <ThemedText style={styles.switchDescription}>
@@ -275,35 +273,14 @@ export default function ConfiguracionScreen() {
                   {isDeviceSubscribed
                     ? "Este navegador / iPhone está activo para recibir alertas flotantes al instante."
                     : isWebPushActive
-                    ? "Hay dispositivos en el negocio, pero este teléfono/navegador aún no está registrado. Toca el botón verde abajo para recibir alertas aquí."
-                    : "Presiona 'Activar Notificaciones Push en este Dispositivo' para comenzar a recibir las alertas aquí."}
+                      ? "Hay dispositivos en el negocio, pero este teléfono/navegador aún no está registrado. Toca el botón verde abajo para recibir alertas aquí."
+                      : "Presiona 'Activar Notificaciones Push en este Dispositivo' para comenzar a recibir las alertas aquí."}
                 </ThemedText>
               </View>
             </View>
 
-            {/* BOTONES DE VINCULACIÓN Y PRUEBA */}
+            {/* BOTÓN DE VINCULACIÓN */}
             <View style={styles.notifBtnGroup}>
-              <Pressable
-                onPress={handleTestNotification}
-                disabled={testingNotif}
-                style={({ pressed }) => [
-                  styles.notifBtnSecondary,
-                  testingNotif && styles.btnDisabled,
-                  pressed && styles.pressed,
-                ]}
-              >
-                {testingNotif ? (
-                  <ActivityIndicator size="small" color={Palette.secondary} />
-                ) : (
-                  <>
-                    <Ionicons name="volume-high-outline" size={18} color={Palette.secondary} />
-                    <ThemedText style={styles.notifBtnSecondaryText}>
-                      Enviar Alerta de Prueba (Push y WhatsApp)
-                    </ThemedText>
-                  </>
-                )}
-              </Pressable>
-
               <Pressable
                 onPress={handleSyncPushToken}
                 disabled={syncingToken}
@@ -319,7 +296,7 @@ export default function ConfiguracionScreen() {
                   <>
                     <Ionicons name="notifications-outline" size={18} color="#ffffff" />
                     <ThemedText style={styles.notifBtnPrimaryText}>
-                      Activar Notificaciones Push en este Dispositivo
+                      Activar Notificaciones
                     </ThemedText>
                   </>
                 )}
@@ -361,7 +338,7 @@ export default function ConfiguracionScreen() {
                       )}
                     </View>
                     <ThemedText style={styles.modeOptionTitle}>
-                      Con Aprobación Manual
+                      Manual
                     </ThemedText>
                   </View>
                   <ThemedText style={styles.modeOptionSubtitle}>
@@ -389,7 +366,7 @@ export default function ConfiguracionScreen() {
                       )}
                     </View>
                     <ThemedText style={styles.modeOptionTitle}>
-                      Confirmación Automática
+                      Automática
                     </ThemedText>
                   </View>
                   <ThemedText style={styles.modeOptionSubtitle}>
@@ -409,7 +386,7 @@ export default function ConfiguracionScreen() {
               <ThemedText style={styles.sectionTitle}>Intervalo de Turnos</ThemedText>
             </View>
             <ThemedText style={styles.sectionDescription}>
-              Frecuencia con la que se generarán los bloques horarios para citas (ej. 30 min genera 10:00, 10:30, 11:00...).
+              Frecuencia con la que se generarán los bloques horarios para citas.
             </ThemedText>
 
             {business && (
@@ -628,22 +605,6 @@ const styles = StyleSheet.create({
   notifBtnGroup: {
     gap: Spacing.two,
     marginTop: Spacing.two,
-  },
-  notifBtnSecondary: {
-    backgroundColor: Palette.surfaceContainerHigh,
-    borderWidth: 1,
-    borderColor: Palette.secondaryDark,
-    borderRadius: BorderRadius.md,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Spacing.three,
-    gap: Spacing.two,
-  },
-  notifBtnSecondaryText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: Palette.secondary,
   },
   notifBtnPrimary: {
     backgroundColor: Palette.primary,
