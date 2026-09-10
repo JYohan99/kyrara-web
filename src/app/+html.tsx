@@ -25,8 +25,14 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Kyrara" />
-        <link rel="apple-touch-icon" href="/icon.png" />
-        <link rel="icon" type="image/png" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3" />
+        <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png?v=3" />
+
+        {/* Favicons y PWA Icons */}
+        <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png?v=3" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=3" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon.png?v=3" />
 
         {/* Color de tema para barra de navegación */}
         <meta name="theme-color" content="#101415" />
