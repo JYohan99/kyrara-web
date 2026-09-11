@@ -193,12 +193,9 @@ export default function ConfiguracionScreen() {
                 <View style={styles.switchTitleRow}>
                   <Ionicons name="alarm-outline" size={16} color={Palette.secondary} />
                   <ThemedText style={styles.switchTitle}>
-                    Aviso 5 min
+                    Aviso 5 min antes
                   </ThemedText>
                 </View>
-                <ThemedText style={styles.switchDescription}>
-                  Recibe una alerta automática cuando falten 5 minutos para comenzar cada cita.
-                </ThemedText>
               </View>
 
               <Switch
@@ -223,9 +220,6 @@ export default function ConfiguracionScreen() {
                     Alertas por WhatsApp
                   </ThemedText>
                 </View>
-                <ThemedText style={styles.switchDescription}>
-                  Recibe un mensaje en tu WhatsApp personal cada vez que un cliente reserve una cita.
-                </ThemedText>
               </View>
 
               <Switch
@@ -279,33 +273,24 @@ export default function ConfiguracionScreen() {
               </View>
             </View>
 
-            {/* BOTÓN DE VINCULACIÓN / DESVINCULACIÓN */}
+            {/* BOTÓN DE VINCULACIÓN */}
             <View style={styles.notifBtnGroup}>
               <Pressable
                 onPress={handleSyncPushToken}
                 disabled={syncingToken}
                 style={({ pressed }) => [
-                  isDeviceSubscribed ? styles.notifBtnDanger : styles.notifBtnPrimary,
+                  styles.notifBtnPrimary,
                   syncingToken && styles.btnDisabled,
                   pressed && styles.pressed,
                 ]}
               >
                 {syncingToken ? (
-                  <ActivityIndicator size="small" color={isDeviceSubscribed ? "#ff5252" : "#ffffff"} />
+                  <ActivityIndicator size="small" color="#ffffff" />
                 ) : (
                   <>
-                    <Ionicons
-                      name={isDeviceSubscribed ? "notifications-off-outline" : "notifications-outline"}
-                      size={18}
-                      color={isDeviceSubscribed ? "#ff5252" : "#ffffff"}
-                    />
-                    <ThemedText
-                      style={[
-                        styles.notifBtnPrimaryText,
-                        isDeviceSubscribed && styles.notifBtnDangerText,
-                      ]}
-                    >
-                      {isDeviceSubscribed ? "Desactivar Notificaciones" : "Activar Notificaciones"}
+                    <Ionicons name="notifications-outline" size={18} color="#ffffff" />
+                    <ThemedText style={styles.notifBtnPrimaryText}>
+                      Activar Notificaciones
                     </ThemedText>
                   </>
                 )}
@@ -322,7 +307,7 @@ export default function ConfiguracionScreen() {
               <ThemedText style={styles.sectionTitle}>Modo de Reserva</ThemedText>
             </View>
             <ThemedText style={styles.sectionDescription}>
-              Elige si las reservas confirmadas por WhatsApp se agendan automáticamente o requieren tu aprobación.
+              Elige si las reservas se agendan automáticamente o requieren tu aprobación.
             </ThemedText>
 
             {business && (
@@ -350,9 +335,6 @@ export default function ConfiguracionScreen() {
                       Manual
                     </ThemedText>
                   </View>
-                  <ThemedText style={styles.modeOptionSubtitle}>
-                    Las solicitudes entran en estado pendiente hasta que tú las aceptes o rechaces.
-                  </ThemedText>
                 </Pressable>
 
                 {/* OPCIÓN: CONFIRMACIÓN AUTOMÁTICA */}
@@ -378,9 +360,6 @@ export default function ConfiguracionScreen() {
                       Automática
                     </ThemedText>
                   </View>
-                  <ThemedText style={styles.modeOptionSubtitle}>
-                    La reserva queda confirmada al instante en tu agenda en cuanto el cliente elige el horario.
-                  </ThemedText>
                 </Pressable>
               </View>
             )}
@@ -395,7 +374,7 @@ export default function ConfiguracionScreen() {
               <ThemedText style={styles.sectionTitle}>Intervalo de Turnos</ThemedText>
             </View>
             <ThemedText style={styles.sectionDescription}>
-              Frecuencia con la que se generarán los bloques horarios para citas.
+              Frecuencia con la que se generan los horarios para citas.
             </ThemedText>
 
             {business && (
@@ -628,20 +607,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#ffffff",
-  },
-  notifBtnDanger: {
-    backgroundColor: "rgba(255, 82, 82, 0.08)",
-    borderWidth: 1,
-    borderColor: "#ff5252",
-    borderRadius: BorderRadius.md,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Spacing.three,
-    gap: Spacing.two,
-  },
-  notifBtnDangerText: {
-    color: "#ff5252",
   },
   modeOptionsContainer: {
     gap: Spacing.two,
