@@ -2,7 +2,6 @@ import { pickSquareImageAsBase64 } from "@/core/services/imagePickerService";
 import {
   isCurrentDeviceSubscribed,
   registerForPushNotifications,
-  sendTestLocalNotification,
   unsubscribeFromPushNotifications,
 } from "@/core/services/notificationService";
 import { useEffect, useState } from "react";
@@ -44,10 +43,17 @@ export function useConfiguracionViewModel() {
   // Estado de si este dispositivo específico tiene la suscripción push activa en el navegador
   const [isDeviceSubscribed, setIsDeviceSubscribed] = useState(false);
 
+  // Estado de si las notificaciones están bloqueadas en el navegador
+  const [isPermissionDenied, setIsPermissionDenied] = useState(false);
+
   // --------------------------------------------------------------------------
   // CARGA INICIAL DE DATOS
   // --------------------------------------------------------------------------
   useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setIsPermissionDenied(Notification.permission === "denied");
+    }
+
     isCurrentDeviceSubscribed().then((active) => {
       setIsDeviceSubscribed(active);
     });
@@ -104,6 +110,7 @@ export function useConfiguracionViewModel() {
         logo_base64: logoBase64 ?? undefined,
       });
       setBusiness(updated);
+      Alert.alert("Éxito", "La información de tu barbería se guardó correctamente.");
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -178,31 +185,9 @@ export function useConfiguracionViewModel() {
   };
 
   // --------------------------------------------------------------------------
-  // ACCIONES: NOTIFICACIONES PUSH Y PRUEBAS
+  // ACCIONES: NOTIFICACIONES PUSH
   // --------------------------------------------------------------------------
-  const [testingNotif, setTestingNotif] = useState(false);
   const [syncingToken, setSyncingToken] = useState(false);
-
-  const handleTestNotification = async () => {
-    setTestingNotif(true);
-    try {
-      const res = await sendTestLocalNotification(
-        "💈 Kyrara Barber",
-        "¡Notificación de prueba recibida con éxito en tu pantalla!"
-      );
-      Alert.alert(
-        "Alerta de Prueba",
-        res.message || "Prueba completada: Se envió la alerta a tu dispositivo y a tu WhatsApp."
-      );
-    } catch (err: any) {
-      Alert.alert(
-        "Error en la prueba",
-        err?.message || "No se pudo enviar la alerta de prueba. Verifica tu conexión o vincula el dispositivo primero."
-      );
-    } finally {
-      setTestingNotif(false);
-    }
-  };
 
   const handleSyncPushToken = async () => {
     setSyncingToken(true);
@@ -249,6 +234,9 @@ export function useConfiguracionViewModel() {
     } catch (err: any) {
       Alert.alert("Error", err?.message || "Ocurrió un error al cambiar la configuración de notificaciones.");
     } finally {
+      if (typeof window !== "undefined" && "Notification" in window) {
+        setIsPermissionDenied(Notification.permission === "denied");
+      }
       setSyncingToken(false);
     }
   };
@@ -257,6 +245,7 @@ export function useConfiguracionViewModel() {
     business,
     isWebPushActive: !!business?.web_push_subscription,
     isDeviceSubscribed,
+    isPermissionDenied,
     loading,
     saving,
     error,
@@ -266,7 +255,6 @@ export function useConfiguracionViewModel() {
     logoBase64,
     notifyUpcoming,
     notifyWhatsApp,
-    testingNotif,
     syncingToken,
     setName,
     setPhone,
@@ -277,7 +265,6 @@ export function useConfiguracionViewModel() {
     handleSelectInterval,
     handleToggleNotifyUpcoming,
     handleToggleNotifyWhatsApp,
-    handleTestNotification,
     handleSyncPushToken,
   };
 }

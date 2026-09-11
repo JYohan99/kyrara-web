@@ -9,7 +9,6 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -39,6 +38,7 @@ export default function ConfiguracionScreen() {
     syncingToken,
     isWebPushActive,
     isDeviceSubscribed,
+    isPermissionDenied,
     setName,
     setPhone,
     setAddress,
@@ -207,12 +207,7 @@ export default function ConfiguracionScreen() {
             </View>
 
             {/* SWITCH TOGGLE: ALERTAS POR WHATSAPP AL BARBERO */}
-            <View
-              style={[
-                styles.switchRow,
-                { borderTopWidth: 1, borderTopColor: Palette.borderSubtle, paddingTop: 12, marginTop: 4 },
-              ]}
-            >
+            <View style={styles.switchRow}>
               <View style={styles.switchTextContainer}>
                 <View style={styles.switchTitleRow}>
                   <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
@@ -230,51 +225,65 @@ export default function ConfiguracionScreen() {
               />
             </View>
 
-            {/* ESTADO DE VINCULACIÓN DE NOTIFICACIONES */}
+            {/* TARJETA UNIFICADA: ESTADO Y BOTÓN DE NOTIFICACIONES EN ESTE DISPOSITIVO */}
             <View
-              style={{
-                backgroundColor: isDeviceSubscribed
-                  ? "rgba(0, 209, 157, 0.08)"
-                  : "rgba(255, 179, 0, 0.08)",
-                borderColor: isDeviceSubscribed ? Palette.secondary : "#ffb300",
-                borderWidth: 1,
-                borderRadius: 12,
-                padding: 12,
-                marginVertical: 10,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-              }}
+              style={[
+                styles.deviceStatusCard,
+                isDeviceSubscribed
+                  ? styles.deviceStatusCardActive
+                  : isPermissionDenied
+                    ? styles.deviceStatusCardDenied
+                    : styles.deviceStatusCardInactive,
+              ]}
             >
-              <Ionicons
-                name={isDeviceSubscribed ? "checkmark-circle" : "alert-circle-outline"}
-                size={22}
-                color={isDeviceSubscribed ? Palette.secondary : "#ffb300"}
-              />
-              <View style={{ flex: 1 }}>
-                <ThemedText
-                  style={{
-                    fontSize: 13,
-                    fontWeight: "700",
-                    color: isDeviceSubscribed ? Palette.secondary : "#ffb300",
-                  }}
-                >
-                  {isDeviceSubscribed
-                    ? "Este Dispositivo: ✅ Vinculado"
-                    : "Este Dispositivo: ⚠️ No Vinculado"}
-                </ThemedText>
-                <ThemedText style={{ fontSize: 11, color: Palette.textMuted, marginTop: 2 }}>
-                  {isDeviceSubscribed
-                    ? "Este navegador / iPhone está activo para recibir alertas flotantes al instante."
-                    : isWebPushActive
-                      ? "Hay dispositivos en el negocio, pero este teléfono/navegador aún no está registrado. Toca el botón abajo para recibir alertas aquí."
-                      : "Presiona 'Activar Notificaciones' para comenzar a recibir las alertas aquí."}
-                </ThemedText>
+              <View style={styles.deviceStatusHeader}>
+                <Ionicons
+                  name={
+                    isDeviceSubscribed
+                      ? "checkmark-circle"
+                      : isPermissionDenied
+                        ? "close-circle-outline"
+                        : "alert-circle-outline"
+                  }
+                  size={22}
+                  color={
+                    isDeviceSubscribed
+                      ? Palette.secondary
+                      : isPermissionDenied
+                        ? "#ff5252"
+                        : "#ffb300"
+                  }
+                />
+                <View style={styles.deviceStatusTextContainer}>
+                  <ThemedText
+                    style={[
+                      styles.deviceStatusTitle,
+                      isDeviceSubscribed
+                        ? styles.deviceStatusTitleActive
+                        : isPermissionDenied
+                          ? styles.deviceStatusTitleDenied
+                          : styles.deviceStatusTitleInactive,
+                    ]}
+                  >
+                    {isDeviceSubscribed
+                      ? "Este Dispositivo: ✅ Vinculado"
+                      : isPermissionDenied
+                        ? "Este Dispositivo: 🚫 Permiso Bloqueado"
+                        : "Este Dispositivo: ⚠️ No Vinculado"}
+                  </ThemedText>
+                  <ThemedText style={styles.deviceStatusSubtitle}>
+                    {isDeviceSubscribed
+                      ? "Este navegador / iPhone está activo para recibir alertas flotantes al instante."
+                      : isPermissionDenied
+                        ? "Las notificaciones están bloqueadas en tu navegador. Toca el candado junto a la URL para permitirlas."
+                        : isWebPushActive
+                          ? "Hay dispositivos en el negocio, pero este teléfono/navegador aún no está registrado. Toca el botón abajo para recibir alertas aquí."
+                          : "Presiona 'Activar Notificaciones' para comenzar a recibir las alertas aquí."}
+                  </ThemedText>
+                </View>
               </View>
-            </View>
 
-            {/* BOTÓN DE VINCULACIÓN / DESACTIVACIÓN */}
-            <View style={styles.notifBtnGroup}>
+              {/* BOTÓN DE VINCULACIÓN / DESACTIVACIÓN */}
               <Pressable
                 onPress={handleSyncPushToken}
                 disabled={syncingToken}
@@ -595,13 +604,51 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: Palette.textPrimary,
   },
-  switchDescription: {
+  deviceStatusCard: {
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    padding: Spacing.three,
+    gap: Spacing.three,
+    marginTop: Spacing.one,
+  },
+  deviceStatusCardActive: {
+    backgroundColor: "rgba(0, 209, 157, 0.08)",
+    borderColor: Palette.secondary,
+  },
+  deviceStatusCardInactive: {
+    backgroundColor: "rgba(255, 179, 0, 0.08)",
+    borderColor: "#ffb300",
+  },
+  deviceStatusCardDenied: {
+    backgroundColor: "rgba(255, 82, 82, 0.08)",
+    borderColor: "#ff5252",
+  },
+  deviceStatusHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.two,
+  },
+  deviceStatusTextContainer: {
+    flex: 1,
+    gap: 2,
+  },
+  deviceStatusTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  deviceStatusTitleActive: {
+    color: Palette.secondary,
+  },
+  deviceStatusTitleInactive: {
+    color: "#ffb300",
+  },
+  deviceStatusTitleDenied: {
+    color: "#ff5252",
+  },
+  deviceStatusSubtitle: {
     fontSize: 12,
     color: Palette.textMuted,
-  },
-  notifBtnGroup: {
-    gap: Spacing.two,
-    marginTop: Spacing.two,
+    lineHeight: 16,
   },
   notifBtnPrimary: {
     backgroundColor: Palette.primary,
@@ -673,11 +720,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: Palette.textPrimary,
-  },
-  modeOptionSubtitle: {
-    fontSize: 12,
-    color: Palette.textMuted,
-    paddingLeft: 26,
   },
   intervalGrid: {
     flexDirection: "row",
