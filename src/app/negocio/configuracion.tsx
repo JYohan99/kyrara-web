@@ -273,24 +273,33 @@ export default function ConfiguracionScreen() {
               </View>
             </View>
 
-            {/* BOTÓN DE VINCULACIÓN */}
+            {/* BOTÓN DE VINCULACIÓN / DESACTIVACIÓN */}
             <View style={styles.notifBtnGroup}>
               <Pressable
                 onPress={handleSyncPushToken}
                 disabled={syncingToken}
                 style={({ pressed }) => [
-                  styles.notifBtnPrimary,
+                  isDeviceSubscribed ? styles.notifBtnDanger : styles.notifBtnPrimary,
                   syncingToken && styles.btnDisabled,
                   pressed && styles.pressed,
                 ]}
               >
                 {syncingToken ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
+                  <ActivityIndicator size="small" color={isDeviceSubscribed ? "#ff5252" : "#ffffff"} />
                 ) : (
                   <>
-                    <Ionicons name="notifications-outline" size={18} color="#ffffff" />
-                    <ThemedText style={styles.notifBtnPrimaryText}>
-                      Activar Notificaciones
+                    <Ionicons
+                      name={isDeviceSubscribed ? "notifications-off-outline" : "notifications-outline"}
+                      size={18}
+                      color={isDeviceSubscribed ? "#ff5252" : "#ffffff"}
+                    />
+                    <ThemedText
+                      style={[
+                        styles.notifBtnPrimaryText,
+                        isDeviceSubscribed && styles.notifBtnDangerText,
+                      ]}
+                    >
+                      {isDeviceSubscribed ? "Desactivar Notificaciones" : "Activar Notificaciones"}
                     </ThemedText>
                   </>
                 )}
@@ -607,6 +616,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#ffffff",
+  },
+  notifBtnDanger: {
+    backgroundColor: "rgba(255, 82, 82, 0.08)",
+    borderWidth: 1,
+    borderColor: "#ff5252",
+    borderRadius: BorderRadius.md,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.three,
+    gap: Spacing.two,
+  },
+  notifBtnDangerText: {
+    color: "#ff5252",
   },
   modeOptionsContainer: {
     gap: Spacing.two,
