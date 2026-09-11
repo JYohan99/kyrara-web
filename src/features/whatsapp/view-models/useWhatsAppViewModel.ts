@@ -14,6 +14,14 @@ import { WhatsAppStatus } from "../models";
 // VIEW MODEL: CONEXIÓN Y ESTADO DE WHATSAPP
 // ============================================================================
 
+function showAlert(title: string, message?: string) {
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    window.alert(`${title}${message ? `\n\n${message}` : ""}`);
+  } else {
+    Alert.alert(title, message);
+  }
+}
+
 export function useWhatsAppViewModel() {
   const [status, setStatus] = useState<WhatsAppStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,7 +100,7 @@ export function useWhatsAppViewModel() {
     }
 
     if (cleanNumber.length < 10) {
-      Alert.alert(
+      showAlert(
         "Número incompleto",
         "Por favor ingresa tu número con código de país (ej. 59893927667 o 093927667)."
       );
@@ -109,7 +117,7 @@ export function useWhatsAppViewModel() {
         setPairingCode(res.code);
       }
     } catch (err: any) {
-      Alert.alert(
+      showAlert(
         "Aviso de vinculación",
         err.message || "El servicio está reconectando con WhatsApp. Espera 3 segundos y presiona el botón nuevamente."
       );
@@ -139,30 +147,39 @@ export function useWhatsAppViewModel() {
   // --------------------------------------------------------------------------
   // DESVINCULAR SESIÓN DE WHATSAPP
   // --------------------------------------------------------------------------
+  const executeLogout = async () => {
+    setDisconnecting(true);
+    try {
+      await logoutWhatsApp();
+      setPairingCode(null);
+      await loadStatus();
+    } catch {
+      showAlert("Error", "No se pudo desconectar la sesión.");
+    } finally {
+      setDisconnecting(false);
+    }
+  };
+
   const handleLogout = () => {
-    Alert.alert(
-      "Desvincular WhatsApp",
-      "¿Seguro que deseas desconectar el bot de WhatsApp? Dejará de responder mensajes automáticos hasta que lo vincules de nuevo.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Desconectar",
-          style: "destructive",
-          onPress: async () => {
-            setDisconnecting(true);
-            try {
-              await logoutWhatsApp();
-              setPairingCode(null);
-              await loadStatus();
-            } catch {
-              Alert.alert("Error", "No se pudo desconectar la sesión.");
-            } finally {
-              setDisconnecting(false);
-            }
-          },
-        },
-      ]
-    );
+    const confirmMessage =
+      "¿Seguro que deseas desconectar el bot de WhatsApp? Dejará de responder mensajes automáticos hasta que lo vincules de nuevo.";
+
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      const confirmed = window.confirm(confirmMessage);
+      if (confirmed) {
+        executeLogout();
+      }
+      return;
+    }
+
+    Alert.alert("Desvincular WhatsApp", confirmMessage, [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Desconectar",
+        style: "destructive",
+        onPress: executeLogout,
+      },
+    ]);
   };
 
   const refreshQr = () => {
