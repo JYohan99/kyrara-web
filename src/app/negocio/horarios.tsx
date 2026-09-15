@@ -38,11 +38,17 @@ export default function HorariosScreen() {
     excModal,
     excDate,
     excReason,
+    excClosedAllDay,
+    excStartTime,
+    excEndTime,
     setDayOfWeek,
     setStartTime,
     setEndTime,
     setExcDate,
     setExcReason,
+    setExcClosedAllDay,
+    setExcStartTime,
+    setExcEndTime,
     openBlockModal,
     closeBlockModal,
     handleCreateBlock,
@@ -172,30 +178,53 @@ export default function HorariosScreen() {
             </View>
 
             <View style={styles.cardsList}>
-              {exceptions.map((e) => (
-                <View key={e.id} style={styles.card}>
-                  <View style={styles.blockInfo}>
-                    <ThemedText style={styles.dayText}>{e.date}</ThemedText>
-                    {e.reason ? (
-                      <ThemedText style={styles.timeRangeText}>
-                        {e.reason}
-                      </ThemedText>
-                    ) : (
-                      <ThemedText style={styles.timeRangeText}>
-                        Cerrado todo el día
-                      </ThemedText>
-                    )}
-                  </View>
+              {exceptions.map((e) => {
+                const isClosedAllDay = e.closed_all_day === 1 || (e.closed_all_day as any) === true;
+                return (
+                  <View key={e.id} style={styles.card}>
+                    <View style={styles.blockInfo}>
+                      <ThemedText style={styles.dayText}>{e.date}</ThemedText>
+                      <View style={styles.excBadgeRow}>
+                        <View
+                          style={[
+                            styles.excBadge,
+                            isClosedAllDay ? styles.excBadgeFull : styles.excBadgePartial,
+                          ]}
+                        >
+                          <Ionicons
+                            name={isClosedAllDay ? "calendar-outline" : "time-outline"}
+                            size={13}
+                            color={isClosedAllDay ? Palette.error : Palette.secondary}
+                          />
+                          <ThemedText
+                            style={[
+                              styles.excBadgeText,
+                              isClosedAllDay ? styles.excBadgeTextFull : styles.excBadgeTextPartial,
+                            ]}
+                          >
+                            {isClosedAllDay
+                              ? "Cerrado todo el día"
+                              : `Cerrado de ${e.start_time ?? "--:--"} a ${e.end_time ?? "--:--"}`}
+                          </ThemedText>
+                        </View>
+                      </View>
+                      {e.reason ? (
+                        <ThemedText style={styles.excReasonText}>
+                          {e.reason}
+                        </ThemedText>
+                      ) : null}
+                    </View>
 
-                  <Pressable
-                    onPress={() => handleDeleteException(e)}
-                    style={({ pressed }) => [styles.deleteBtn, pressed && styles.pressed]}
-                    hitSlop={8}
-                  >
-                    <Ionicons name="trash-outline" size={18} color={Palette.error} />
-                  </Pressable>
-                </View>
-              ))}
+                    <Pressable
+                      onPress={() => handleDeleteException(e)}
+                      style={({ pressed }) => [styles.deleteBtn, pressed && styles.pressed]}
+                      hitSlop={8}
+                    >
+                      <Ionicons name="trash-outline" size={18} color={Palette.error} />
+                    </Pressable>
+                  </View>
+                );
+              })}
 
               {exceptions.length === 0 && !loading && (
                 <View style={styles.emptyCard}>
@@ -299,6 +328,7 @@ export default function HorariosScreen() {
                 </View>
 
                 <View style={styles.formGroup}>
+                  <ThemedText style={styles.inputLabel}>Fecha de la excepción</ThemedText>
                   <View style={styles.modalInputWrap}>
                     <Ionicons name="calendar-outline" size={18} color={Palette.textMuted} />
                     <TextInput
@@ -310,10 +340,90 @@ export default function HorariosScreen() {
                     />
                   </View>
 
+                  <ThemedText style={styles.inputLabel}>Tipo de cierre</ThemedText>
+                  <View style={styles.closureTypeToggleRow}>
+                    <Pressable
+                      onPress={() => setExcClosedAllDay(true)}
+                      style={[
+                        styles.closureTypeChip,
+                        excClosedAllDay && styles.closureTypeChipActive,
+                      ]}
+                    >
+                      <Ionicons
+                        name="calendar-outline"
+                        size={16}
+                        color={excClosedAllDay ? "#ffffff" : Palette.textMuted}
+                      />
+                      <ThemedText
+                        style={[
+                          styles.closureTypeChipText,
+                          excClosedAllDay && styles.closureTypeChipTextActive,
+                        ]}
+                      >
+                        Día Completo
+                      </ThemedText>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => setExcClosedAllDay(false)}
+                      style={[
+                        styles.closureTypeChip,
+                        !excClosedAllDay && styles.closureTypeChipActive,
+                      ]}
+                    >
+                      <Ionicons
+                        name="time-outline"
+                        size={16}
+                        color={!excClosedAllDay ? "#ffffff" : Palette.textMuted}
+                      />
+                      <ThemedText
+                        style={[
+                          styles.closureTypeChipText,
+                          !excClosedAllDay && styles.closureTypeChipTextActive,
+                        ]}
+                      >
+                        Por Horario
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+
+                  {!excClosedAllDay && (
+                    <View style={styles.timeInputsRow}>
+                      <View style={{ flex: 1, gap: 4 }}>
+                        <ThemedText style={styles.inputLabel}>Desde</ThemedText>
+                        <View style={styles.modalInputWrap}>
+                          <Ionicons name="time-outline" size={18} color={Palette.textMuted} />
+                          <TextInput
+                            placeholder="Ej. 13:00"
+                            placeholderTextColor={Palette.textMuted}
+                            value={excStartTime}
+                            onChangeText={setExcStartTime}
+                            style={styles.modalInput}
+                          />
+                        </View>
+                      </View>
+
+                      <View style={{ flex: 1, gap: 4 }}>
+                        <ThemedText style={styles.inputLabel}>Hasta</ThemedText>
+                        <View style={styles.modalInputWrap}>
+                          <Ionicons name="time-outline" size={18} color={Palette.textMuted} />
+                          <TextInput
+                            placeholder="Ej. 15:00"
+                            placeholderTextColor={Palette.textMuted}
+                            value={excEndTime}
+                            onChangeText={setExcEndTime}
+                            style={styles.modalInput}
+                          />
+                        </View>
+                      </View>
+                    </View>
+                  )}
+
+                  <ThemedText style={styles.inputLabel}>Motivo (opcional)</ThemedText>
                   <View style={styles.modalInputWrap}>
                     <Ionicons name="chatbubble-ellipses-outline" size={18} color={Palette.textMuted} />
                     <TextInput
-                      placeholder="Motivo (ej. Navidad / Mantenimiento)"
+                      placeholder="Motivo (ej. Almuerzo / Mantenimiento)"
                       placeholderTextColor={Palette.textMuted}
                       value={excReason}
                       onChangeText={setExcReason}
@@ -576,6 +686,75 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 14,
     fontWeight: "700",
+  },
+  closureTypeToggleRow: {
+    flexDirection: "row",
+    gap: Spacing.two,
+  },
+  closureTypeChip: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    backgroundColor: Palette.surfaceContainerHigh,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Palette.borderSubtle,
+  },
+  closureTypeChipActive: {
+    backgroundColor: Palette.primary,
+    borderColor: Palette.primary,
+  },
+  closureTypeChipText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: Palette.textMuted,
+  },
+  closureTypeChipTextActive: {
+    color: "#ffffff",
+    fontWeight: "700",
+  },
+  timeInputsRow: {
+    flexDirection: "row",
+    gap: Spacing.two,
+  },
+  excBadgeRow: {
+    flexDirection: "row",
+    marginTop: 3,
+  },
+  excBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+  },
+  excBadgeFull: {
+    backgroundColor: "rgba(255, 82, 82, 0.08)",
+    borderColor: "rgba(255, 82, 82, 0.3)",
+  },
+  excBadgePartial: {
+    backgroundColor: "rgba(0, 209, 157, 0.08)",
+    borderColor: "rgba(0, 209, 157, 0.3)",
+  },
+  excBadgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  excBadgeTextFull: {
+    color: Palette.error,
+  },
+  excBadgeTextPartial: {
+    color: Palette.secondary,
+  },
+  excReasonText: {
+    fontSize: 12,
+    color: Palette.textMuted,
+    marginTop: 3,
   },
   pressed: {
     opacity: 0.75,

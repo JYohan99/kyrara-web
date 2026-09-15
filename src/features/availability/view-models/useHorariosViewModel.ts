@@ -35,6 +35,9 @@ export function useHorariosViewModel() {
   const [excModal, setExcModal] = useState(false);
   const [excDate, setExcDate] = useState("");
   const [excReason, setExcReason] = useState("");
+  const [excClosedAllDay, setExcClosedAllDay] = useState(true);
+  const [excStartTime, setExcStartTime] = useState("13:00");
+  const [excEndTime, setExcEndTime] = useState("15:00");
 
   const load = useCallback(() => {
     setLoading(true);
@@ -99,6 +102,9 @@ export function useHorariosViewModel() {
   const openExcModal = () => {
     setExcDate("");
     setExcReason("");
+    setExcClosedAllDay(true);
+    setExcStartTime("13:00");
+    setExcEndTime("15:00");
     setExcModal(true);
   };
 
@@ -107,16 +113,40 @@ export function useHorariosViewModel() {
   };
 
   const handleCreateException = async () => {
-    if (!excDate.trim()) return;
+    const trimmedDate = excDate.trim();
+    if (!trimmedDate) {
+      setError("La fecha es obligatoria");
+      return;
+    }
+
+    if (!excClosedAllDay) {
+      const trimmedStart = excStartTime.trim();
+      const trimmedEnd = excEndTime.trim();
+      if (!trimmedStart || !trimmedEnd) {
+        setError("Las horas de inicio y fin son obligatorias para cierres parciales");
+        return;
+      }
+      if (trimmedStart >= trimmedEnd) {
+        setError("La hora de inicio debe ser anterior a la hora de fin");
+        return;
+      }
+    }
+
     try {
       await createException({
-        date: excDate.trim(),
-        closed_all_day: true,
+        date: trimmedDate,
+        closed_all_day: excClosedAllDay,
+        start_time: excClosedAllDay ? null : excStartTime.trim(),
+        end_time: excClosedAllDay ? null : excEndTime.trim(),
         reason: excReason.trim() || undefined,
       });
       setExcModal(false);
       setExcDate("");
       setExcReason("");
+      setExcClosedAllDay(true);
+      setExcStartTime("13:00");
+      setExcEndTime("15:00");
+      setError(null);
       load();
     } catch (e: any) {
       setError(e.message);
@@ -144,11 +174,17 @@ export function useHorariosViewModel() {
     excModal,
     excDate,
     excReason,
+    excClosedAllDay,
+    excStartTime,
+    excEndTime,
     setDayOfWeek,
     setStartTime,
     setEndTime,
     setExcDate,
     setExcReason,
+    setExcClosedAllDay,
+    setExcStartTime,
+    setExcEndTime,
     openBlockModal,
     closeBlockModal,
     handleCreateBlock,

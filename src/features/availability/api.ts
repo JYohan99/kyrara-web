@@ -50,6 +50,8 @@ export async function listExceptions(): Promise<AvailabilityException[]> {
 export async function createException(data: {
   date: string;
   closed_all_day: boolean;
+  start_time?: string | null;
+  end_time?: string | null;
   reason?: string;
 }): Promise<AvailabilityException> {
   const res = await fetch(`${API_BASE_URL}/availability/exceptions`, {
