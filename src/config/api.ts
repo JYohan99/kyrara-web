@@ -18,28 +18,62 @@ function resolveLocalUrl(): string {
 }
 
 function resolveCloudUrl(): string {
-  // 1. Variable de entorno explícita (si se configura en Vercel)
+  // 1. Detección en navegador según el dominio actual (prioridad en frontend)
+  if (typeof window !== "undefined" && window.location) {
+    const host = window.location.hostname.toLowerCase();
+
+    // Si estamos en localhost o IP local
+    if (host === "localhost" || host === "127.0.0.1" || host.startsWith("192.168.")) {
+      return DEV_BACKEND_URL;
+    }
+
+    // Indicadores explícitos de entorno de desarrollo / preview / git branch
+    const isExplicitPreview =
+      host.includes("develop") ||
+      host.includes("-dev") ||
+      host.includes("preview") ||
+      host.includes("staging") ||
+      host.includes("-git-");
+
+    if (isExplicitPreview) {
+      return DEV_BACKEND_URL;
+    }
+
+    // Dominios oficiales de PRODUCCIÓN (donde opera el barbero con datos reales)
+    const isOfficialProductionDomain =
+      host === "kyrara-app.vercel.app" ||
+      host === "kyrara-web.vercel.app" ||
+      host === "kyrara.vercel.app";
+
+    // En Vercel: si es cualquier otro subdominio *.vercel.app (por ejemplo un hash de despliegue como kyrara-app-8x...vercel.app),
+    // es un preview deployment y debe usar el backend de DEV para no afectar al barbero.
+    if (!isOfficialProductionDomain && host.endsWith(".vercel.app")) {
+      return DEV_BACKEND_URL;
+    }
+
+    if (isOfficialProductionDomain) {
+      return PRODUCTION_BACKEND_URL;
+    }
+  }
+
+  // 2. Variable de entorno explícita (si se configuró para un build específico en Vercel)
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
   }
 
-  // 2. Detección automática en navegador según el dominio
-  if (typeof window !== "undefined" && window.location) {
-    const host = window.location.hostname.toLowerCase();
-    // Si la web está en una preview de Vercel (rama develop), o dominio dev/staging
-    if (
-      host.includes("develop") ||
-      host.includes("-dev") ||
-      host.includes("preview") ||
-      host.includes("staging")
-    ) {
-      return DEV_BACKEND_URL;
-    }
-  }
-
-  // 3. Producción por defecto (la web oficial del barbero)
+  // 3. Producción por defecto (para compilación de producción del barbero)
   return PRODUCTION_BACKEND_URL;
 }
 
 export const API_BASE_URL = USE_LOCAL ? resolveLocalUrl() : resolveCloudUrl();
+
+export const IS_DEV_MODE = API_BASE_URL === DEV_BACKEND_URL;
+
+if (typeof window !== "undefined") {
+  console.log(
+    `[Kyrara] Backend: ${API_BASE_URL} | Modo: ${
+      IS_DEV_MODE ? "DESARROLLO / PRUEBAS" : "PRODUCCIÓN"
+    }`
+  );
+}
 
