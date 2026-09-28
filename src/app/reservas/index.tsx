@@ -108,6 +108,7 @@ export default function ReservasScreen() {
             const canCancel =
               item.status === "CONFIRMED" || item.status === "PENDING_APPROVAL";
             const isPending = item.status === "PENDING_APPROVAL";
+            const isInteractive = isPending || item.status === "CONFIRMED";
 
             return (
               <View style={styles.card}>
@@ -139,11 +140,11 @@ export default function ReservasScreen() {
                 <View style={styles.actionsColumn}>
                   <Pressable
                     onPress={() => handleBadgePress(item)}
-                    disabled={!isPending}
+                    disabled={!isInteractive}
                     style={({ pressed }) => [
                       styles.badge,
                       { backgroundColor: displayStatus.color },
-                      isPending && pressed && styles.pressed,
+                      isInteractive && pressed && styles.pressed,
                     ]}
                   >
                     <ThemedText

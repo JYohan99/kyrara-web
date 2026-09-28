@@ -98,6 +98,20 @@ export async function completeAppointment(id: string): Promise<void> {
 }
 
 /**
+ * Marca una reserva como No Presentado.
+ */
+export async function markAppointmentNoShow(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/appointments/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "NO_SHOW" }),
+  });
+  if (!res.ok) {
+    throw new Error("No se pudo marcar la cita como No Presentado");
+  }
+}
+
+/**
  * Actualiza la configuración operativa del negocio (intervalos, modo de reserva y recordatorios).
  */
 export async function updateBusinessSettings(data: {

@@ -15,6 +15,15 @@ import {
 export default function NegocioScreen() {
   const menuItems = [
     {
+      href: "/negocio/estadisticas" as const,
+      title: "Estadísticas",
+      subtitle: "Métricas de reservas, ingresos y servicios más solicitados",
+      icon: "bar-chart-outline" as const,
+      iconColor: Palette.primaryLight,
+      iconBg: Palette.primaryDark,
+      tag: "Métricas",
+    },
+    {
       href: "/negocio/servicios" as const,
       title: "Servicios",
       subtitle: "Catálogo de cortes, precios y duraciones",

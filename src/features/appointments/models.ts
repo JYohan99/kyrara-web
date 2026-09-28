@@ -57,7 +57,7 @@ export function getDisplayStatus(
   if (status === "CANCELLED") return { label: "Cancelada", color: Palette.errorDark, textColor: Palette.error };
   if (status === "PENDING_APPROVAL")
     return { label: "Pendiente", color: "#452600", textColor: Palette.warningLight };
-  if (status === "NO_SHOW") return { label: "No asistió", color: "#2B2D31", textColor: Palette.textMuted };
+  if (status === "NO_SHOW") return { label: "No Presentado", color: "#2B2D31", textColor: Palette.textMuted };
   if (status === "COMPLETED")
     return { label: "Completada", color: "#003828", textColor: Palette.successLight };
 
