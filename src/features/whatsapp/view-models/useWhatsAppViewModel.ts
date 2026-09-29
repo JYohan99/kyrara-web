@@ -95,13 +95,13 @@ export function useWhatsAppViewModel() {
     let cleanLocal = phoneNumber.replace(/[^0-9]/g, "");
     let cleanCountry = countryCode.replace(/[^0-9]/g, "") || "598";
 
-    // Si el usuario en Uruguay ingresa 09X XXX XXX (9 dígitos empezando en 0), quitamos el 0 inicial
-    if (cleanLocal.startsWith("0") && cleanLocal.length === 9) {
-      cleanLocal = cleanLocal.slice(1);
-    }
-    // Si el usuario por error volvió a incluir el código de país en el número local
+    // 1. Si por error el usuario incluyó el código de país en la casilla del número local
     if (cleanLocal.startsWith(cleanCountry)) {
       cleanLocal = cleanLocal.slice(cleanCountry.length);
+    }
+    // 2. Si el usuario en Uruguay ingresa 09X XXX XXX (empezando en 0), quitamos el 0 inicial
+    if (cleanLocal.startsWith("0")) {
+      cleanLocal = cleanLocal.slice(1);
     }
 
     const fullNumber = `${cleanCountry}${cleanLocal}`;
