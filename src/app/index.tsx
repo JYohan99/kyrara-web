@@ -240,7 +240,7 @@ export default function HomeScreen() {
                                 <ActivityIndicator size="small" color="#f87171" />
                               ) : (
                                 <>
-                                  <Ionicons name="person-remove-outline" size={15} color="#f87171" />
+                                  <Ionicons name="close-circle-outline" size={16} color="#f87171" />
                                   <ThemedText style={styles.bentoNoShowBtnText}>
                                     No presentado
                                   </ThemedText>
