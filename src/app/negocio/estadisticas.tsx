@@ -936,9 +936,6 @@ export default function EstadisticasScreen() {
                     <ThemedText style={styles.chartTitle}>
                       ✂️ Servicios más solicitados
                     </ThemedText>
-                    <ThemedText style={styles.chartSubtitle}>
-                      Ranking de cortes y servicios con mayor demanda y facturación
-                    </ThemedText>
                   </View>
                 </View>
 

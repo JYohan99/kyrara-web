@@ -32,7 +32,9 @@ export default function HomeScreen() {
     error,
     loading,
     completing,
+    markingNoShow,
     handleCompleteAppointment,
+    handleMarkNoShow,
     handleAdvanceToNextAppointment,
     getDisplayStatus,
     getTimeRemainingText,
@@ -203,26 +205,49 @@ export default function HomeScreen() {
                         }
 
                         return (
-                          <Pressable
-                            onPress={() => handleCompleteAppointment(activeAppointment)}
-                            disabled={completing}
-                            style={({ pressed }) => [
-                              styles.bentoActionBtn,
-                              completing && styles.btnDisabled,
-                              pressed && styles.pressed,
-                            ]}
-                          >
-                            {completing ? (
-                              <ActivityIndicator size="small" color="#ffffff" />
-                            ) : (
-                              <>
-                                <Ionicons name="checkmark-done" size={18} color="#ffffff" />
-                                <ThemedText style={styles.bentoActionBtnText}>
-                                  Finalizar Servicio
-                                </ThemedText>
-                              </>
-                            )}
-                          </Pressable>
+                          <View style={styles.bentoActionButtonsWrap}>
+                            <Pressable
+                              onPress={() => handleCompleteAppointment(activeAppointment)}
+                              disabled={completing || markingNoShow}
+                              style={({ pressed }) => [
+                                styles.bentoActionBtn,
+                                (completing || markingNoShow) && styles.btnDisabled,
+                                pressed && styles.pressed,
+                              ]}
+                            >
+                              {completing ? (
+                                <ActivityIndicator size="small" color="#ffffff" />
+                              ) : (
+                                <>
+                                  <Ionicons name="checkmark-done" size={18} color="#ffffff" />
+                                  <ThemedText style={styles.bentoActionBtnText}>
+                                    Finalizar
+                                  </ThemedText>
+                                </>
+                              )}
+                            </Pressable>
+
+                            <Pressable
+                              onPress={() => handleMarkNoShow(activeAppointment)}
+                              disabled={completing || markingNoShow}
+                              style={({ pressed }) => [
+                                styles.bentoNoShowBtn,
+                                (completing || markingNoShow) && styles.btnDisabled,
+                                pressed && styles.pressed,
+                              ]}
+                            >
+                              {markingNoShow ? (
+                                <ActivityIndicator size="small" color={Palette.error} />
+                              ) : (
+                                <>
+                                  <Ionicons name="person-remove-outline" size={16} color={Palette.error} />
+                                  <ThemedText style={styles.bentoNoShowBtnText}>
+                                    No presentado
+                                  </ThemedText>
+                                </>
+                              )}
+                            </Pressable>
+                          </View>
                         );
                       })()}
                     </View>
@@ -501,6 +526,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: Spacing.two,
   },
+  bentoActionButtonsWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+    flexWrap: "wrap",
+  },
   bentoActionBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -514,6 +545,22 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 14,
     fontWeight: "700",
+  },
+  bentoNoShowBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 180, 171, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 180, 171, 0.25)",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: BorderRadius.lg,
+    gap: 6,
+  },
+  bentoNoShowBtnText: {
+    color: Palette.error,
+    fontSize: 14,
+    fontWeight: "600",
   },
   btnDisabled: {
     opacity: 0.6,

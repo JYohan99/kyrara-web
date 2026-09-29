@@ -5,8 +5,13 @@ import {
 } from "@/core/utils/date";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert } from "react-native";
-import { completeAppointment, fetchBusiness, listAppointments } from "../api";
+import { Alert, Platform } from "react-native";
+import {
+  completeAppointment,
+  fetchBusiness,
+  listAppointments,
+  markAppointmentNoShow,
+} from "../api";
 import { Appointment, Business, getDisplayStatus, Service } from "../models";
 
 export function useHomeViewModel() {
@@ -18,6 +23,7 @@ export function useHomeViewModel() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState(false);
+  const [markingNoShow, setMarkingNoShow] = useState(false);
 
   const todayStr = getTodayDateString();
   const todayDateLabel = formatFullDateLabel(todayStr);
@@ -89,43 +95,107 @@ export function useHomeViewModel() {
       .finally(() => setLoading(false));
   }, []);
 
+  const executeCompleteAppointment = async (appointment: Appointment) => {
+    try {
+      setCompleting(true);
+      await completeAppointment(appointment.id);
+      // Actualizar inmediatamente estado local para reflejar "Completada" en el acto
+      setActiveAppointment((prev) =>
+        prev && prev.id === appointment.id
+          ? { ...prev, status: "COMPLETED" }
+          : prev,
+      );
+      setTodayAppointments((prev) =>
+        prev.map((a) =>
+          a.id === appointment.id ? { ...a, status: "COMPLETED" } : a,
+        ),
+      );
+      load();
+    } catch (e: any) {
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        window.alert(e.message || "No se pudo finalizar el servicio");
+      } else {
+        Alert.alert("Error", e.message || "No se pudo finalizar el servicio");
+      }
+    } finally {
+      setCompleting(false);
+    }
+  };
+
   const handleCompleteAppointment = useCallback(
     async (appointment: Appointment) => {
+      const message = `¿Deseas finalizar el servicio de ${appointment.customer_name || "este cliente"}?`;
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        if (window.confirm(message)) {
+          await executeCompleteAppointment(appointment);
+        }
+        return;
+      }
+
       Alert.alert(
         "Finalizar Servicio",
-        `¿Deseas marcar como completado el servicio de ${appointment.customer_name || "este cliente"}?`,
+        message,
         [
           { text: "Cancelar", style: "cancel" },
           {
             text: "Finalizar",
             style: "default",
-            onPress: async () => {
-              try {
-                setCompleting(true);
-                await completeAppointment(appointment.id);
-                // Actualizar inmediatamente estado local para reflejar "Completada" en el acto
-                setActiveAppointment((prev) =>
-                  prev && prev.id === appointment.id
-                    ? { ...prev, status: "COMPLETED" }
-                    : prev,
-                );
-                setTodayAppointments((prev) =>
-                  prev.map((a) =>
-                    a.id === appointment.id ? { ...a, status: "COMPLETED" } : a,
-                  ),
-                );
-                load();
-              } catch (e: any) {
-                Alert.alert("Error", e.message || "No se pudo finalizar el servicio");
-              } finally {
-                setCompleting(false);
-              }
-            },
+            onPress: () => executeCompleteAppointment(appointment),
           },
         ],
       );
     },
     [load],
+  );
+
+  const executeMarkNoShow = async (appointment: Appointment) => {
+    try {
+      setMarkingNoShow(true);
+      await markAppointmentNoShow(appointment.id);
+      // Si hay un turno siguiente pendiente, avanzar a él inmediatamente
+      setActiveAppointment(upcomingAppointments.length > 0 ? upcomingAppointments[0] : null);
+      setUpcomingAppointments((prev) => prev.slice(1));
+      setTodayAppointments((prev) =>
+        prev.map((a) =>
+          a.id === appointment.id ? { ...a, status: "NO_SHOW" } : a,
+        ),
+      );
+      load();
+    } catch (e: any) {
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        window.alert(e.message || "No se pudo marcar como no presentado");
+      } else {
+        Alert.alert("Error", e.message || "No se pudo marcar como no presentado");
+      }
+    } finally {
+      setMarkingNoShow(false);
+    }
+  };
+
+  const handleMarkNoShow = useCallback(
+    async (appointment: Appointment) => {
+      const message = `¿Deseas marcar el turno de ${appointment.customer_name || "este cliente"} como no presentado?`;
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        if (window.confirm(message)) {
+          await executeMarkNoShow(appointment);
+        }
+        return;
+      }
+
+      Alert.alert(
+        "No presentado",
+        message,
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "No presentado",
+            style: "destructive",
+            onPress: () => executeMarkNoShow(appointment),
+          },
+        ],
+      );
+    },
+    [load, upcomingAppointments],
   );
 
   const handleAdvanceToNextAppointment = useCallback(() => {
@@ -155,8 +225,10 @@ export function useHomeViewModel() {
     error,
     loading,
     completing,
+    markingNoShow,
     refresh: load,
     handleCompleteAppointment,
+    handleMarkNoShow,
     handleAdvanceToNextAppointment,
     getDisplayStatus,
     getTimeRemainingText,
