@@ -191,6 +191,7 @@ export function useWhatsAppViewModel() {
 
   const refreshQr = () => {
     setQrUrl(getWhatsAppQRUrl());
+    loadStatus();
   };
 
   const isConnected = status?.status === "open";
