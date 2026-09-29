@@ -57,7 +57,7 @@ export default function CustomerDetailScreen() {
     <ThemedView style={styles.container}>
       <Stack.Screen
         options={{
-          title: customer?.name || "Detalle de Cliente",
+          title: "Detalles",
           headerShown: true,
           headerStyle: { backgroundColor: Palette.background },
           headerTintColor: Palette.textPrimary,
@@ -145,6 +145,11 @@ export default function CustomerDetailScreen() {
         <View style={styles.sectionHeaderWrap}>
           <Ionicons name="calendar-outline" size={16} color={Palette.secondary} />
           <ThemedText style={styles.sectionTitle}>Historial de Reservas</ThemedText>
+          <View style={styles.countBadge}>
+            <ThemedText style={styles.countBadgeText}>
+              {customer?.appointments?.length ?? 0}
+            </ThemedText>
+          </View>
         </View>
 
         <FlatList
@@ -427,6 +432,20 @@ const styles = StyleSheet.create({
     color: Palette.textSecondary,
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  countBadge: {
+    backgroundColor: Palette.surfaceContainerHigh,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Palette.borderSubtle,
+    marginLeft: 2,
+  },
+  countBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: Palette.secondary,
   },
   historyListContent: {
     paddingHorizontal: Spacing.four,
