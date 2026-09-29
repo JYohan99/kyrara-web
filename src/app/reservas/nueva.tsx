@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -18,6 +19,10 @@ import {
   Palette,
   Spacing,
 } from "@/constants/theme";
+import {
+  addDaysToDateString,
+  getTodayDateString,
+} from "@/core/utils/date";
 import { useNuevaReservaViewModel } from "@/features/appointments";
 
 function getInitials(name?: string | null, phone?: string): string {
@@ -28,6 +33,48 @@ function getInitials(name?: string | null, phone?: string): string {
   }
   if (phone) return phone.slice(-2);
   return "?";
+}
+
+function getUpcomingDays(count = 21) {
+  const todayStr = getTodayDateString();
+  const days: { dateStr: string; dayOfWeek: string; dayNum: string; isToday: boolean }[] = [];
+  for (let i = 0; i < count; i++) {
+    const dateStr = addDaysToDateString(todayStr, i);
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const dateObj = new Date(Date.UTC(y, m - 1, d));
+    const dayOfWeek =
+      i === 0
+        ? "HOY"
+        : dateObj
+            .toLocaleDateString("es-ES", { weekday: "short", timeZone: "UTC" })
+            .toUpperCase()
+            .replace(".", "");
+    const dayNum = String(d);
+    days.push({
+      dateStr,
+      dayOfWeek,
+      dayNum,
+      isToday: i === 0,
+    });
+  }
+  return days;
+}
+
+function getMonthYearLabel(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dateObj = new Date(Date.UTC(y, m - 1, d));
+  const monthName = dateObj.toLocaleDateString("es-ES", { month: "long", timeZone: "UTC" });
+  return monthName.charAt(0).toUpperCase() + monthName.slice(1) + " " + y;
+}
+
+function formatSummaryDate(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dateObj = new Date(Date.UTC(y, m - 1, d));
+  const weekday = dateObj.toLocaleDateString("es-ES", { weekday: "short", timeZone: "UTC" });
+  const month = dateObj.toLocaleDateString("es-ES", { month: "short", timeZone: "UTC" });
+  const weekdayCap = weekday.charAt(0).toUpperCase() + weekday.slice(1).replace(".", "");
+  const monthCap = month.charAt(0).toUpperCase() + month.slice(1).replace(".", "");
+  return `${weekdayCap} ${d} ${monthCap}`;
 }
 
 export default function NuevaReservaScreen() {
@@ -51,6 +98,30 @@ export default function NuevaReservaScreen() {
     handleConfirm,
   } = useNuevaReservaViewModel();
 
+  const [customerSearch, setCustomerSearch] = useState("");
+
+  const upcomingDays = useMemo(() => getUpcomingDays(21), []);
+
+  const filteredCustomers = useMemo(() => {
+    const q = customerSearch.trim().toLowerCase();
+    const list = !q
+      ? customers
+      : customers.filter(
+          (c) =>
+            (c.name && c.name.toLowerCase().includes(q)) ||
+            c.phone.toLowerCase().includes(q),
+        );
+
+    // Si hay un cliente seleccionado, asegurar que esté al frente
+    if (selectedCustomer) {
+      return [
+        selectedCustomer,
+        ...list.filter((c) => c.id !== selectedCustomer.id),
+      ];
+    }
+    return list;
+  }, [customers, customerSearch, selectedCustomer]);
+
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen
@@ -68,28 +139,61 @@ export default function NuevaReservaScreen() {
           style={{ flex: 1 }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {/* SECCIÓN 1: CLIENTE */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="person-outline" size={16} color={Palette.primaryLight} />
-              <ThemedText style={styles.sectionLabel}>1. Seleccionar Cliente</ThemedText>
+          {/* ============================================================== */}
+          {/* 1. SELECCIONAR CLIENTE (Estilo Stitch)                          */}
+          {/* ============================================================== */}
+          <View style={styles.cardSection}>
+            <View style={styles.sectionHeaderRow}>
+              <ThemedText style={styles.sectionTitle}>Cliente</ThemedText>
+              <Pressable
+                onPress={() => router.push("/clientes")}
+                style={({ pressed }) => [styles.newClientBtn, pressed && styles.pressed]}
+                hitSlop={6}
+              >
+                <Ionicons name="add" size={16} color={Palette.secondary} />
+                <ThemedText style={styles.newClientBtnText}>Nuevo Cliente</ThemedText>
+              </Pressable>
             </View>
 
+            {/* Input de Búsqueda */}
+            <View style={styles.searchWrap}>
+              <Ionicons
+                name="search-outline"
+                size={18}
+                color={Palette.textMuted}
+                style={styles.searchIcon}
+              />
+              <TextInput
+                value={customerSearch}
+                onChangeText={setCustomerSearch}
+                placeholder="Buscar cliente por nombre o teléfono..."
+                placeholderTextColor={Palette.textMuted}
+                style={styles.searchInput}
+              />
+              {customerSearch.length > 0 && (
+                <Pressable onPress={() => setCustomerSearch("")} hitSlop={8}>
+                  <Ionicons name="close-circle" size={16} color={Palette.textMuted} />
+                </Pressable>
+              )}
+            </View>
+
+            {/* Chips Horizontales de Selección Rápida */}
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalChipsWrap}
+              contentContainerStyle={styles.chipsScrollContent}
             >
-              {customers.map((c) => {
+              {filteredCustomers.map((c) => {
                 const isSelected = selectedCustomer?.id === c.id;
                 return (
                   <Pressable
                     key={c.id}
                     onPress={() => handleSelectCustomer(c)}
                     style={({ pressed }) => [
-                      styles.customerCard,
-                      isSelected && styles.customerCardSelected,
+                      styles.customerChip,
+                      isSelected && styles.customerChipSelected,
                       pressed && styles.pressed,
                     ]}
                   >
@@ -110,31 +214,34 @@ export default function NuevaReservaScreen() {
                     </View>
                     <ThemedText
                       style={[
-                        styles.chipText,
-                        isSelected && styles.chipTextSelected,
+                        styles.customerChipText,
+                        isSelected && styles.customerChipTextSelected,
                       ]}
                       numberOfLines={1}
                     >
                       {c.name || c.phone}
                     </ThemedText>
+                    {isSelected && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={16}
+                        color={Palette.primary}
+                        style={{ marginLeft: 2 }}
+                      />
+                    )}
                   </Pressable>
                 );
               })}
             </ScrollView>
           </View>
 
-          {/* SECCIÓN 2: SERVICIO */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="cut-outline" size={16} color={Palette.secondary} />
-              <ThemedText style={styles.sectionLabel}>2. Seleccionar Servicio</ThemedText>
-            </View>
+          {/* ============================================================== */}
+          {/* 2. SELECCIONAR SERVICIO (Estilo Stitch)                         */}
+          {/* ============================================================== */}
+          <View style={styles.cardSection}>
+            <ThemedText style={styles.sectionTitle}>Servicios</ThemedText>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalChipsWrap}
-            >
+            <View style={styles.servicesGrid}>
               {services
                 .filter((s) => s.active)
                 .map((s) => {
@@ -149,112 +256,216 @@ export default function NuevaReservaScreen() {
                         pressed && styles.pressed,
                       ]}
                     >
-                      <ThemedText
+                      {/* Barra de acento vertical izquierda */}
+                      <View
                         style={[
-                          styles.serviceTitle,
-                          isSelected && styles.serviceTitleSelected,
+                          styles.serviceAccentBar,
+                          isSelected && styles.serviceAccentBarSelected,
                         ]}
-                      >
-                        {s.name}
-                      </ThemedText>
-                      <View style={styles.serviceMetaRow}>
-                        <ThemedText style={styles.serviceDuration}>
-                          {s.duration_minutes} min
-                        </ThemedText>
-                        {s.price !== null && (
-                          <View style={styles.priceBadge}>
-                            <ThemedText style={styles.priceBadgeText}>
-                              ${s.price}
+                      />
+
+                      <View style={styles.serviceContentWrap}>
+                        <View style={styles.serviceTopRow}>
+                          <ThemedText
+                            style={[
+                              styles.serviceTitle,
+                              isSelected && styles.serviceTitleSelected,
+                            ]}
+                          >
+                            {s.name}
+                          </ThemedText>
+                          <Ionicons
+                            name={isSelected ? "checkmark-circle" : "ellipse-outline"}
+                            size={20}
+                            color={isSelected ? Palette.primary : Palette.outline}
+                          />
+                        </View>
+
+                        <View style={styles.serviceBottomRow}>
+                          <View style={styles.serviceDurationBadge}>
+                            <Ionicons
+                              name="time-outline"
+                              size={12}
+                              color={Palette.textMuted}
+                            />
+                            <ThemedText style={styles.serviceDurationText}>
+                              {s.duration_minutes} min
                             </ThemedText>
                           </View>
-                        )}
+
+                          {s.price !== null && (
+                            <ThemedText style={styles.servicePrice}>
+                              $ {s.price}
+                            </ThemedText>
+                          )}
+                        </View>
                       </View>
                     </Pressable>
                   );
                 })}
-            </ScrollView>
-          </View>
-
-          {/* SECCIÓN 3: FECHA */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="calendar-outline" size={16} color={Palette.primaryLight} />
-              <ThemedText style={styles.sectionLabel}>3. Fecha de Reserva</ThemedText>
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Ionicons name="today-outline" size={18} color={Palette.textMuted} />
-              <TextInput
-                value={date}
-                onChangeText={handleDateChange}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={Palette.textMuted}
-                style={styles.textInput}
-              />
             </View>
           </View>
 
-          {/* SECCIÓN 4: HORARIOS DISPONIBLES */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="time-outline" size={16} color={Palette.secondary} />
-              <ThemedText style={styles.sectionLabel}>4. Horario Disponible</ThemedText>
+          {/* ============================================================== */}
+          {/* 3. FECHA Y HORA (Estilo Stitch)                                 */}
+          {/* ============================================================== */}
+          <View style={styles.cardSection}>
+            <View style={styles.sectionHeaderRow}>
+              <ThemedText style={styles.sectionTitle}>Fecha y Hora</ThemedText>
+              <ThemedText style={styles.monthHeaderLabel}>
+                {getMonthYearLabel(date)}
+              </ThemedText>
             </View>
 
-            {loadingSlots && (
-              <View style={styles.slotsLoadingWrap}>
-                <ActivityIndicator size="small" color={Palette.secondary} />
-                <ThemedText style={styles.slotsLoadingText}>
-                  Consultando disponibilidad en tiempo real...
-                </ThemedText>
-              </View>
-            )}
-
-            {!loadingSlots && selectedService && slots.length === 0 && (
-              <View style={styles.noSlotsCard}>
-                <Ionicons name="information-circle-outline" size={20} color={Palette.warning} />
-                <ThemedText style={styles.noSlotsText}>
-                  No hay horarios disponibles para la fecha seleccionada.
-                </ThemedText>
-              </View>
-            )}
-
-            <View style={styles.slotsGrid}>
-              {slots.map((slot) => {
-                const isSelected = selectedSlot === slot;
+            {/* Carrusel de Días (Date Strip) */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.dateStripContent}
+            >
+              {upcomingDays.map((d) => {
+                const isSelected = date === d.dateStr;
                 return (
                   <Pressable
-                    key={slot}
-                    onPress={() => handleSelectSlot(slot)}
+                    key={d.dateStr}
+                    onPress={() => handleDateChange(d.dateStr)}
                     style={({ pressed }) => [
-                      styles.slotChip,
-                      isSelected && styles.slotChipSelected,
+                      styles.dayCard,
+                      isSelected && styles.dayCardSelected,
                       pressed && styles.pressed,
                     ]}
                   >
                     <ThemedText
                       style={[
-                        styles.slotText,
-                        isSelected && styles.slotTextSelected,
+                        styles.dayOfWeekText,
+                        isSelected && styles.dayOfWeekTextSelected,
                       ]}
                     >
-                      {slot}
+                      {d.dayOfWeek}
                     </ThemedText>
+                    <ThemedText
+                      style={[
+                        styles.dayNumberText,
+                        isSelected && styles.dayNumberTextSelected,
+                      ]}
+                    >
+                      {d.dayNum}
+                    </ThemedText>
+                    {isSelected && <View style={styles.selectedDayDot} />}
                   </Pressable>
                 );
               })}
+            </ScrollView>
+
+            <View style={styles.sectionDivider} />
+
+            {/* Grilla de Horarios */}
+            <View style={styles.slotsSectionWrap}>
+              <ThemedText style={styles.slotsSubtitle}>
+                HORARIOS DISPONIBLES
+              </ThemedText>
+
+              {loadingSlots && (
+                <View style={styles.slotsLoadingWrap}>
+                  <ActivityIndicator size="small" color={Palette.secondary} />
+                  <ThemedText style={styles.slotsLoadingText}>
+                    Consultando disponibilidad en tiempo real...
+                  </ThemedText>
+                </View>
+              )}
+
+              {!loadingSlots && selectedService && slots.length === 0 && (
+                <View style={styles.noSlotsCard}>
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={20}
+                    color={Palette.warning}
+                  />
+                  <ThemedText style={styles.noSlotsText}>
+                    No hay horarios disponibles para esta fecha. Selecciona otro día o servicio.
+                  </ThemedText>
+                </View>
+              )}
+
+              {!loadingSlots && !selectedService && (
+                <View style={styles.noServiceCard}>
+                  <Ionicons
+                    name="cut-outline"
+                    size={20}
+                    color={Palette.textMuted}
+                  />
+                  <ThemedText style={styles.noServiceText}>
+                    Elige un servicio arriba para ver los horarios disponibles.
+                  </ThemedText>
+                </View>
+              )}
+
+              <View style={styles.slotsGrid}>
+                {slots.map((slot) => {
+                  const isSelected = selectedSlot === slot;
+                  return (
+                    <Pressable
+                      key={slot}
+                      onPress={() => handleSelectSlot(slot)}
+                      style={({ pressed }) => [
+                        styles.slotCard,
+                        isSelected && styles.slotCardSelected,
+                        pressed && styles.pressed,
+                      ]}
+                    >
+                      <ThemedText
+                        style={[
+                          styles.slotText,
+                          isSelected && styles.slotTextSelected,
+                        ]}
+                      >
+                        {slot}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
           </View>
 
-          {/* MENSAJE DE ERROR */}
+          {/* Banner de error */}
           {error && (
             <View style={styles.errorBanner}>
               <Ionicons name="alert-circle-outline" size={20} color={Palette.error} />
               <ThemedText style={styles.errorText}>{error}</ThemedText>
             </View>
           )}
+        </ScrollView>
 
-          {/* BOTÓN CONFIRMAR */}
+        {/* ============================================================== */}
+        {/* BARRA INFERIOR FLOTANTE DE CONFIRMACIÓN (Estilo Stitch)         */}
+        {/* ============================================================== */}
+        <View style={styles.bottomDockedBar}>
+          <View style={styles.bottomSummaryRow}>
+            <View style={styles.bottomSummaryLeft}>
+              <View style={styles.bottomDateTimeRow}>
+                <Ionicons name="calendar-outline" size={13} color={Palette.textMuted} />
+                <ThemedText style={styles.bottomDateTimeText}>
+                  {formatSummaryDate(date)} • {selectedSlot || "--:--"}
+                  {selectedService ? ` (${selectedService.duration_minutes}m)` : ""}
+                </ThemedText>
+              </View>
+              <ThemedText style={styles.bottomServiceText} numberOfLines={1}>
+                {selectedService?.name || "Selecciona un servicio"} •{" "}
+                {selectedCustomer?.name || selectedCustomer?.phone || "Sin cliente"}
+              </ThemedText>
+            </View>
+
+            <View style={styles.bottomSummaryRight}>
+              <ThemedText style={styles.bottomTotalLabel}>TOTAL</ThemedText>
+              <ThemedText style={styles.bottomPriceText}>
+                {selectedService?.price !== null && selectedService?.price !== undefined
+                  ? `$ ${selectedService.price}`
+                  : "--"}
+              </ThemedText>
+            </View>
+          </View>
+
           <Pressable
             style={({ pressed }) => [
               styles.confirmButton,
@@ -267,19 +478,32 @@ export default function NuevaReservaScreen() {
             {saving ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <View style={styles.confirmButtonContent}>
-                <ThemedText style={styles.confirmButtonText}>
+              <View style={styles.confirmContent}>
+                <ThemedText
+                  style={[
+                    styles.confirmButtonText,
+                    isConfirmDisabled && styles.confirmButtonTextDisabled,
+                  ]}
+                >
                   Confirmar Reserva
                 </ThemedText>
-                <Ionicons name="arrow-forward" size={18} color="#ffffff" />
+                <Ionicons
+                  name="arrow-forward"
+                  size={18}
+                  color={isConfirmDisabled ? Palette.textMuted : "#ffffff"}
+                />
               </View>
             )}
           </Pressable>
-        </ScrollView>
+        </View>
       </SafeAreaView>
     </ThemedView>
   );
 }
+
+// ============================================================================
+// ESTILOS VISUALES (PALETA OBSIDIAN / STITCH DESIGN SYSTEM)
+// ============================================================================
 
 const styles = StyleSheet.create({
   container: {
@@ -295,130 +519,238 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: Spacing.four,
     gap: Spacing.four,
-    paddingBottom: 40,
+    paddingBottom: 130, // Espacio para que el dock inferior no tape contenido
   },
-  section: {
-    gap: Spacing.two,
+  cardSection: {
+    backgroundColor: Palette.surfaceContainer,
+    borderRadius: BorderRadius.card,
+    borderWidth: 1,
+    borderColor: Palette.borderSubtle,
+    padding: Spacing.four,
+    gap: Spacing.three,
   },
-  sectionHeader: {
+  sectionHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    justifyContent: "space-between",
   },
-  sectionLabel: {
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: Palette.primaryLight,
+  },
+  newClientBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  newClientBtnText: {
     fontSize: 12,
     fontWeight: "700",
-    color: Palette.textSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    color: Palette.secondary,
+    letterSpacing: 0.2,
   },
-  horizontalChipsWrap: {
+  searchWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Palette.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: Palette.border,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.three,
+    height: 44,
+    gap: Spacing.two,
+  },
+  searchIcon: {
+    marginRight: 2,
+  },
+  searchInput: {
+    flex: 1,
+    color: Palette.textPrimary,
+    fontSize: 14,
+  },
+  chipsScrollContent: {
     gap: Spacing.two,
     paddingVertical: 4,
   },
-  customerCard: {
+  customerChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 7,
     paddingHorizontal: 12,
     borderRadius: BorderRadius.pill,
-    backgroundColor: Palette.surfaceContainer,
+    backgroundColor: Palette.surfaceContainerLowest,
     borderWidth: 1,
     borderColor: Palette.borderSubtle,
     gap: 8,
   },
-  customerCardSelected: {
-    backgroundColor: Palette.primary,
+  customerChipSelected: {
+    backgroundColor: Palette.surfaceContainerHigh,
     borderColor: Palette.primary,
+    borderWidth: 1.5,
   },
   avatarCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Palette.surfaceContainerHigh,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: Palette.surfaceContainerHighest,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarCircleSelected: {
-    backgroundColor: "rgba(255,255,255,0.25)",
+    backgroundColor: Palette.primary,
   },
   avatarText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "700",
     color: Palette.textPrimary,
   },
   avatarTextSelected: {
     color: "#ffffff",
   },
-  chipText: {
-    fontSize: 14,
+  customerChipText: {
+    fontSize: 13,
     fontWeight: "500",
-    color: Palette.textPrimary,
+    color: Palette.textMuted,
   },
-  chipTextSelected: {
-    color: "#ffffff",
+  customerChipTextSelected: {
+    color: Palette.textPrimary,
     fontWeight: "700",
   },
+  servicesGrid: {
+    gap: Spacing.two,
+  },
   serviceCard: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: BorderRadius.card,
-    backgroundColor: Palette.surfaceContainer,
+    flexDirection: "row",
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Palette.surfaceContainerLowest,
     borderWidth: 1,
     borderColor: Palette.borderSubtle,
-    minWidth: 140,
-    gap: 6,
+    overflow: "hidden",
+    position: "relative",
   },
   serviceCardSelected: {
     backgroundColor: Palette.surfaceContainerHigh,
-    borderColor: Palette.secondary,
+    borderColor: Palette.primary,
+    borderWidth: 1.5,
   },
-  serviceTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: Palette.textPrimary,
+  serviceAccentBar: {
+    width: 4,
+    backgroundColor: Palette.surfaceContainerHighest,
   },
-  serviceTitleSelected: {
-    color: Palette.secondary,
+  serviceAccentBarSelected: {
+    backgroundColor: Palette.primary,
   },
-  serviceMetaRow: {
+  serviceContentWrap: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    gap: 6,
+  },
+  serviceTopRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
   },
-  serviceDuration: {
-    fontSize: 12,
-    color: Palette.textMuted,
+  serviceTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: Palette.textPrimary,
+    flex: 1,
   },
-  priceBadge: {
-    backgroundColor: Palette.surfaceContainerLowest,
+  serviceTitleSelected: {
+    color: Palette.textPrimary,
+    fontWeight: "700",
+  },
+  serviceBottomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  serviceDurationBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: Palette.surfaceContainerHigh,
     paddingVertical: 2,
     paddingHorizontal: 8,
     borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-    borderColor: Palette.borderSubtle,
   },
-  priceBadgeText: {
-    fontSize: 12,
+  serviceDurationText: {
+    fontSize: 11,
+    color: Palette.textMuted,
+    fontWeight: "500",
+  },
+  servicePrice: {
+    fontSize: 16,
     fontWeight: "700",
     color: Palette.secondary,
   },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Palette.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: Palette.border,
+  monthHeaderLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: Palette.textMuted,
+  },
+  dateStripContent: {
+    gap: 8,
+    paddingVertical: 2,
+  },
+  dayCard: {
+    width: 62,
+    height: 76,
     borderRadius: BorderRadius.lg,
-    paddingHorizontal: Spacing.three,
-    height: 48,
+    backgroundColor: Palette.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: Palette.borderSubtle,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+  },
+  dayCardSelected: {
+    backgroundColor: Palette.primary,
+    borderColor: Palette.primaryLight,
+    borderWidth: 1.5,
+  },
+  dayOfWeekText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: Palette.textMuted,
+    letterSpacing: 0.5,
+  },
+  dayOfWeekTextSelected: {
+    color: "#ffffff",
+    fontWeight: "700",
+  },
+  dayNumberText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: Palette.textPrimary,
+  },
+  dayNumberTextSelected: {
+    color: "#ffffff",
+    fontWeight: "900",
+  },
+  selectedDayDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: Palette.secondary,
+    marginTop: 2,
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: Palette.borderSubtle,
+    marginVertical: 2,
+  },
+  slotsSectionWrap: {
     gap: Spacing.two,
   },
-  textInput: {
-    flex: 1,
-    color: Palette.textPrimary,
-    fontSize: 15,
+  slotsSubtitle: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: Palette.textMuted,
+    letterSpacing: 0.6,
   },
   slotsLoadingWrap: {
     flexDirection: "row",
@@ -433,7 +765,7 @@ const styles = StyleSheet.create({
   noSlotsCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Palette.surfaceContainer,
+    backgroundColor: Palette.surfaceContainerLowest,
     borderWidth: 1,
     borderColor: Palette.borderSubtle,
     padding: Spacing.three,
@@ -445,24 +777,41 @@ const styles = StyleSheet.create({
     color: Palette.textSecondary,
     flex: 1,
   },
+  noServiceCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Palette.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: Palette.borderSubtle,
+    padding: Spacing.three,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.two,
+  },
+  noServiceText: {
+    fontSize: 13,
+    color: Palette.textMuted,
+    flex: 1,
+  },
   slotsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: Spacing.two,
+    gap: 8,
   },
-  slotChip: {
+  slotCard: {
+    width: "23%", // 4 columnas uniformes
+    minWidth: 70,
     paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: BorderRadius.lg,
-    backgroundColor: Palette.surfaceContainer,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Palette.surfaceContainerLowest,
     borderWidth: 1,
     borderColor: Palette.borderSubtle,
-    minWidth: 72,
     alignItems: "center",
+    justifyContent: "center",
   },
-  slotChipSelected: {
-    backgroundColor: Palette.primary,
+  slotCardSelected: {
+    backgroundColor: "rgba(138, 79, 255, 0.2)",
     borderColor: Palette.primary,
+    borderWidth: 1.5,
   },
   slotText: {
     fontSize: 14,
@@ -470,7 +819,7 @@ const styles = StyleSheet.create({
     color: Palette.textPrimary,
   },
   slotTextSelected: {
-    color: "#ffffff",
+    color: Palette.primaryLight,
     fontWeight: "700",
   },
   errorBanner: {
@@ -486,33 +835,80 @@ const styles = StyleSheet.create({
     fontSize: 13,
     flex: 1,
   },
-  confirmButton: {
-    backgroundColor: Palette.primary,
-    height: 52,
-    borderRadius: BorderRadius.xl,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: Spacing.two,
-    shadowColor: Palette.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 4,
+  bottomDockedBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(28, 32, 33, 0.96)",
+    borderTopWidth: 1,
+    borderTopColor: Palette.borderSubtle,
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.three,
+    paddingBottom: Spacing.three,
+    gap: Spacing.two,
   },
-  confirmButtonDisabled: {
-    opacity: 0.35,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  confirmButtonContent: {
+  bottomSummaryRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.two,
+    justifyContent: "space-between",
+  },
+  bottomSummaryLeft: {
+    flex: 1,
+    gap: 2,
+    paddingRight: Spacing.two,
+  },
+  bottomDateTimeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  bottomDateTimeText: {
+    fontSize: 12,
+    color: Palette.textMuted,
+    fontWeight: "500",
+  },
+  bottomServiceText: {
+    fontSize: 13,
+    color: Palette.textPrimary,
+    fontWeight: "600",
+  },
+  bottomSummaryRight: {
+    alignItems: "flex-end",
+  },
+  bottomTotalLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Palette.textMuted,
+    letterSpacing: 0.5,
+  },
+  bottomPriceText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: Palette.secondary,
+  },
+  confirmButton: {
+    backgroundColor: Palette.primary,
+    height: 48,
+    borderRadius: BorderRadius.lg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  confirmButtonDisabled: {
+    backgroundColor: Palette.surfaceContainerHighest,
+  },
+  confirmContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   confirmButtonText: {
     color: "#ffffff",
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
+  },
+  confirmButtonTextDisabled: {
+    color: Palette.textMuted,
   },
   pressed: {
     opacity: 0.75,
