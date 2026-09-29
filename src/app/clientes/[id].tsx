@@ -50,6 +50,7 @@ export default function CustomerDetailScreen() {
     closeEdit,
     handleSave,
     handleDelete,
+    navigateToCreateAppointment,
   } = useCustomerDetailViewModel();
 
   return (
@@ -123,6 +124,20 @@ export default function CustomerDetailScreen() {
                 <ThemedText style={styles.notesText}>{customer.notes}</ThemedText>
               </View>
             ) : null}
+
+            {/* BOTÓN: CREAR CITA PARA ESTE CLIENTE */}
+            <Pressable
+              onPress={navigateToCreateAppointment}
+              style={({ pressed }) => [
+                styles.createAppointmentBtn,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Ionicons name="calendar" size={17} color="#ffffff" />
+              <ThemedText style={styles.createAppointmentBtnText}>
+                Agendar Cita
+              </ThemedText>
+            </Pressable>
           </View>
         )}
 
@@ -382,6 +397,22 @@ const styles = StyleSheet.create({
     color: Palette.textSecondary,
     flex: 1,
     lineHeight: 18,
+  },
+  createAppointmentBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: Palette.primary,
+    paddingVertical: 11,
+    paddingHorizontal: 16,
+    borderRadius: BorderRadius.lg,
+    marginTop: Spacing.one,
+  },
+  createAppointmentBtnText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "700",
   },
   sectionHeaderWrap: {
     flexDirection: "row",

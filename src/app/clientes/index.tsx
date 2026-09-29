@@ -51,6 +51,7 @@ export default function ClientesScreen() {
     closeCreateModal,
     handleSaveCustomer,
     navigateToDetail,
+    navigateToCreateAppointment,
   } = useClientesViewModel();
 
   return (
@@ -119,6 +120,22 @@ export default function ClientesScreen() {
                   </ThemedText>
                 </View>
               </View>
+
+              {/* Botón rápido para crear cita a este cliente */}
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  navigateToCreateAppointment(item.id);
+                }}
+                style={({ pressed }) => [
+                  styles.quickAppointmentBtn,
+                  pressed && styles.pressed,
+                ]}
+                hitSlop={6}
+              >
+                <Ionicons name="calendar-outline" size={14} color={Palette.primaryLight} />
+                <ThemedText style={styles.quickAppointmentText}>Agendar</ThemedText>
+              </Pressable>
 
               <Ionicons
                 name="chevron-forward"
@@ -336,6 +353,23 @@ const styles = StyleSheet.create({
   customerPhone: {
     fontSize: 13,
     color: Palette.textMuted,
+  },
+  quickAppointmentBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(138, 79, 255, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(138, 79, 255, 0.3)",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: BorderRadius.pill,
+    gap: 4,
+    marginRight: 4,
+  },
+  quickAppointmentText: {
+    color: Palette.primaryLight,
+    fontSize: 12,
+    fontWeight: "600",
   },
   loadingContainer: {
     paddingVertical: Spacing.six,

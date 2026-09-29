@@ -78,6 +78,13 @@ export function useClientesViewModel() {
     });
   };
 
+  const navigateToCreateAppointment = (customerId: string) => {
+    router.push({
+      pathname: "/reservas/nueva" as any,
+      params: { customerId },
+    });
+  };
+
   return {
     customers,
     search,
@@ -97,5 +104,6 @@ export function useClientesViewModel() {
     closeCreateModal,
     handleSaveCustomer,
     navigateToDetail,
+    navigateToCreateAppointment,
   };
 }

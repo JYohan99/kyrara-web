@@ -1,12 +1,13 @@
 import { getTodayDateString } from "@/core/utils/date";
 import { Customer, listCustomers } from "@/features/customers";
 import { Service, listServices } from "@/features/services";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { createAppointment, getAvailableSlots } from "../api";
 
 export function useNuevaReservaViewModel() {
   const router = useRouter();
+  const { customerId } = useLocalSearchParams<{ customerId?: string }>();
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -24,12 +25,23 @@ export function useNuevaReservaViewModel() {
 
   useEffect(() => {
     listCustomers()
-      .then(setCustomers)
+      .then((data) => {
+        if (customerId) {
+          const match = data.find((c) => c.id === customerId);
+          if (match) {
+            setSelectedCustomer(match);
+            const reordered = [match, ...data.filter((c) => c.id !== customerId)];
+            setCustomers(reordered);
+            return;
+          }
+        }
+        setCustomers(data);
+      })
       .catch((e) => setError(e.message));
     listServices()
       .then(setServices)
       .catch((e) => setError(e.message));
-  }, []);
+  }, [customerId]);
 
   useEffect(() => {
     if (!selectedService || !date) {

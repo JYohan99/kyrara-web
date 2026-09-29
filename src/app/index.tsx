@@ -322,16 +322,14 @@ export default function HomeScreen() {
                     );
                   })}
 
-                  {/* Espacio Libre / Botón Crear Reserva */}
-                  <Pressable
-                    onPress={() => router.push("/reservas/nueva")}
-                    style={({ pressed }) => [styles.freeSlotCard, pressed && styles.pressed]}
-                  >
-                    <Ionicons name="add-circle-outline" size={22} color={Palette.primaryLight} />
-                    <ThemedText style={styles.freeSlotText}>
-                      + Registrar Nueva Cita / Turno
-                    </ThemedText>
-                  </Pressable>
+                  {upcomingAppointments.length === 0 && (
+                    <View style={styles.emptyUpcomingCard}>
+                      <Ionicons name="calendar-outline" size={18} color={Palette.textMuted} />
+                      <ThemedText style={styles.emptyUpcomingText}>
+                        No hay más citas programadas para hoy
+                      </ThemedText>
+                    </View>
+                  )}
                 </View>
               </View>
             </>
@@ -692,22 +690,21 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
   },
-  freeSlotCard: {
+  emptyUpcomingCard: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1.5,
-    borderStyle: "dashed",
-    borderColor: Palette.border,
-    backgroundColor: "rgba(39, 43, 44, 0.25)",
-    paddingVertical: 14,
+    backgroundColor: Palette.surfaceContainer,
+    borderWidth: 1,
+    borderColor: Palette.borderSubtle,
+    paddingVertical: Spacing.four,
+    paddingHorizontal: Spacing.three,
     borderRadius: BorderRadius.card,
     gap: 8,
   },
-  freeSlotText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: Palette.primaryLight,
+  emptyUpcomingText: {
+    fontSize: 13,
+    color: Palette.textMuted,
   },
   pressed: {
     opacity: 0.75,
