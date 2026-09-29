@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -27,6 +28,9 @@ import {
 } from "@/features/statistics";
 
 export default function EstadisticasScreen() {
+  const { width: windowWidth } = useWindowDimensions();
+  const isMobile = windowWidth < 680;
+
   const {
     period,
     selectPeriod,
@@ -89,45 +93,35 @@ export default function EstadisticasScreen() {
       />
 
       <SafeAreaView edges={["bottom"]} style={styles.safeArea}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={Palette.primary}
-              colors={[Palette.primary, Palette.secondary]}
-            />
-          }
-        >
-          {/* Header con resumen de rango */}
-          <View style={styles.header}>
-            <View style={styles.headerTitleWrap}>
+        {/* Barra superior fija (Sticky Header): Header compacto + Selector de período */}
+        <View style={styles.stickyHeader}>
+          <View style={styles.stickyHeaderTopRow}>
+            <View style={styles.stickyTitleWrap}>
               <ThemedText style={styles.screenTitle}>
-                Panel de Estadísticas
+                Estadísticas
               </ThemedText>
-              <ThemedText style={styles.screenSubtitle}>
-                Métricas comerciales, volumen de turnos y recaudación
-              </ThemedText>
+              {!isMobile && (
+                <ThemedText style={styles.screenSubtitle}>
+                  Métricas comerciales, volumen de turnos y recaudación
+                </ThemedText>
+              )}
             </View>
 
             {data && (
               <View style={styles.dateRangeBadge}>
                 <Ionicons
                   name="calendar-outline"
-                  size={14}
+                  size={13}
                   color={Palette.secondaryLight}
                 />
-                <ThemedText style={styles.dateRangeBadgeText}>
+                <ThemedText style={styles.dateRangeBadgeText} numberOfLines={1}>
                   {data.currentRange.formattedRange}
                 </ThemedText>
               </View>
             )}
           </View>
 
-          {/* Selector de Período */}
+          {/* Selector de Período Horizontal Fijo */}
           <View style={styles.periodSelectorWrapper}>
             <ScrollView
               horizontal
@@ -223,7 +217,22 @@ export default function EstadisticasScreen() {
               </View>
             </View>
           )}
+        </View>
 
+        {/* Contenido scrolleable debajo de la barra fija */}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={Palette.primary}
+              colors={[Palette.primary, Palette.secondary]}
+            />
+          }
+        >
           {/* Estado de Carga */}
           {loading && (
             <View style={styles.loadingContainer}>
@@ -261,7 +270,7 @@ export default function EstadisticasScreen() {
 
               <View style={styles.kpiGrid}>
                 {/* 1. Reservas */}
-                <View style={[styles.kpiCard, styles.kpiCardHighlight]}>
+                <View style={[styles.kpiCard, isMobile ? styles.kpiCardMobile : styles.kpiCardDesktop, styles.kpiCardHighlight]}>
                   <View style={styles.kpiTopRow}>
                     <View
                       style={[
@@ -288,18 +297,18 @@ export default function EstadisticasScreen() {
                     style={[
                       styles.comparisonBadge,
                       data.metrics.totalReservations.direction === "up" &&
-                        styles.comparisonBadgeUp,
+                      styles.comparisonBadgeUp,
                       data.metrics.totalReservations.direction === "down" &&
-                        styles.comparisonBadgeDown,
+                      styles.comparisonBadgeDown,
                     ]}
                   >
                     <ThemedText
                       style={[
                         styles.comparisonBadgeText,
                         data.metrics.totalReservations.direction === "up" &&
-                          styles.comparisonTextUp,
+                        styles.comparisonTextUp,
                         data.metrics.totalReservations.direction === "down" &&
-                          styles.comparisonTextDown,
+                        styles.comparisonTextDown,
                       ]}
                     >
                       {data.metrics.totalReservations.comparisonText}
@@ -311,6 +320,7 @@ export default function EstadisticasScreen() {
                 <View
                   style={[
                     styles.kpiCard,
+                    isMobile ? styles.kpiCardMobile : styles.kpiCardDesktop,
                     styles.kpiCardHighlight,
                     styles.kpiCardRevenue,
                   ]}
@@ -343,18 +353,18 @@ export default function EstadisticasScreen() {
                     style={[
                       styles.comparisonBadge,
                       data.metrics.revenue.direction === "up" &&
-                        styles.comparisonBadgeUp,
+                      styles.comparisonBadgeUp,
                       data.metrics.revenue.direction === "down" &&
-                        styles.comparisonBadgeDown,
+                      styles.comparisonBadgeDown,
                     ]}
                   >
                     <ThemedText
                       style={[
                         styles.comparisonBadgeText,
                         data.metrics.revenue.direction === "up" &&
-                          styles.comparisonTextUp,
+                        styles.comparisonTextUp,
                         data.metrics.revenue.direction === "down" &&
-                          styles.comparisonTextDown,
+                        styles.comparisonTextDown,
                       ]}
                     >
                       {data.metrics.revenue.comparisonText}
@@ -363,7 +373,7 @@ export default function EstadisticasScreen() {
                 </View>
 
                 {/* 3. Completadas */}
-                <View style={styles.kpiCard}>
+                <View style={[styles.kpiCard, isMobile ? styles.kpiCardMobile : styles.kpiCardDesktop]}>
                   <View style={styles.kpiTopRow}>
                     <View
                       style={[
@@ -393,7 +403,7 @@ export default function EstadisticasScreen() {
                 </View>
 
                 {/* 4. Clientes Nuevos */}
-                <View style={styles.kpiCard}>
+                <View style={[styles.kpiCard, isMobile ? styles.kpiCardMobile : styles.kpiCardDesktop]}>
                   <View style={styles.kpiTopRow}>
                     <View
                       style={[
@@ -421,18 +431,18 @@ export default function EstadisticasScreen() {
                     style={[
                       styles.comparisonBadge,
                       data.metrics.newCustomers.direction === "up" &&
-                        styles.comparisonBadgeUp,
+                      styles.comparisonBadgeUp,
                       data.metrics.newCustomers.direction === "down" &&
-                        styles.comparisonBadgeDown,
+                      styles.comparisonBadgeDown,
                     ]}
                   >
                     <ThemedText
                       style={[
                         styles.comparisonBadgeText,
                         data.metrics.newCustomers.direction === "up" &&
-                          styles.comparisonTextUp,
+                        styles.comparisonTextUp,
                         data.metrics.newCustomers.direction === "down" &&
-                          styles.comparisonTextDown,
+                        styles.comparisonTextDown,
                       ]}
                     >
                       {data.metrics.newCustomers.comparisonText}
@@ -441,7 +451,7 @@ export default function EstadisticasScreen() {
                 </View>
 
                 {/* 5. Canceladas */}
-                <View style={styles.kpiCard}>
+                <View style={[styles.kpiCard, isMobile ? styles.kpiCardMobile : styles.kpiCardDesktop]}>
                   <View style={styles.kpiTopRow}>
                     <View
                       style={[
@@ -473,7 +483,7 @@ export default function EstadisticasScreen() {
                 </View>
 
                 {/* 6. No Presentado */}
-                <View style={styles.kpiCard}>
+                <View style={[styles.kpiCard, isMobile ? styles.kpiCardMobile : styles.kpiCardDesktop]}>
                   <View style={styles.kpiTopRow}>
                     <View
                       style={[
@@ -565,9 +575,9 @@ export default function EstadisticasScreen() {
                       style={[
                         styles.comparisonItemBadge,
                         data.metrics.totalReservations.direction === "up" &&
-                          styles.comparisonTextUp,
+                        styles.comparisonTextUp,
                         data.metrics.totalReservations.direction === "down" &&
-                          styles.comparisonTextDown,
+                        styles.comparisonTextDown,
                       ]}
                     >
                       {data.metrics.totalReservations.comparisonText}
@@ -593,9 +603,9 @@ export default function EstadisticasScreen() {
                       style={[
                         styles.comparisonItemBadge,
                         data.metrics.revenue.direction === "up" &&
-                          styles.comparisonTextUp,
+                        styles.comparisonTextUp,
                         data.metrics.revenue.direction === "down" &&
-                          styles.comparisonTextDown,
+                        styles.comparisonTextDown,
                       ]}
                     >
                       {data.metrics.revenue.comparisonText}
@@ -621,9 +631,9 @@ export default function EstadisticasScreen() {
                       style={[
                         styles.comparisonItemBadge,
                         data.metrics.newCustomers.direction === "up" &&
-                          styles.comparisonTextUp,
+                        styles.comparisonTextUp,
                         data.metrics.newCustomers.direction === "down" &&
-                          styles.comparisonTextDown,
+                        styles.comparisonTextDown,
                       ]}
                     >
                       {data.metrics.newCustomers.comparisonText}
@@ -868,7 +878,7 @@ export default function EstadisticasScreen() {
                                   style={[
                                     styles.rankBadgeText,
                                     (isTop1 || isTop2 || isTop3) &&
-                                      styles.rankBadgeTextTop,
+                                    styles.rankBadgeTextTop,
                                   ]}
                                 >
                                   #{index + 1}
@@ -953,36 +963,50 @@ const styles = StyleSheet.create({
     gap: Spacing.four,
     paddingBottom: Spacing.six,
   },
-  header: {
+  stickyHeader: {
+    backgroundColor: Palette.background,
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.two,
+    paddingBottom: Spacing.three,
+    gap: Spacing.two,
+    borderBottomWidth: 1,
+    borderBottomColor: Palette.borderSubtle,
+    zIndex: 10,
+  },
+  stickyHeaderTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: Spacing.two,
   },
-  headerTitleWrap: {
-    gap: 4,
+  stickyTitleWrap: {
+    gap: 2,
+    flex: 1,
   },
   screenTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "800",
     color: Palette.textPrimary,
   },
   screenSubtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: Palette.textMuted,
-    lineHeight: 20,
+    lineHeight: 16,
   },
   dateRangeBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     backgroundColor: Palette.surfaceContainerHigh,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     borderRadius: BorderRadius.pill,
-    alignSelf: "flex-start",
     borderWidth: 1,
     borderColor: Palette.borderSubtle,
+    maxWidth: "58%",
   },
   dateRangeBadgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "600",
     color: Palette.secondaryLight,
   },
@@ -1115,16 +1139,23 @@ const styles = StyleSheet.create({
   kpiGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "space-between",
     gap: Spacing.three,
+    width: "100%",
   },
   kpiCard: {
-    width: "48%",
     backgroundColor: Palette.surfaceContainer,
     borderRadius: BorderRadius.card,
-    padding: Spacing.three,
+    padding: Spacing.four,
     gap: 6,
     borderWidth: 1,
     borderColor: Palette.borderSubtle,
+  },
+  kpiCardMobile: {
+    width: "100%",
+  },
+  kpiCardDesktop: {
+    width: "48%",
   },
   kpiCardHighlight: {
     backgroundColor: Palette.surfaceContainerHigh,
