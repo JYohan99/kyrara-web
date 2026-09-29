@@ -17,47 +17,37 @@ export default function NegocioScreen() {
     {
       href: "/negocio/estadisticas" as const,
       title: "Estadísticas",
-      subtitle: "Métricas de reservas, ingresos y servicios más solicitados",
       icon: "bar-chart-outline" as const,
       iconColor: Palette.primaryLight,
       iconBg: Palette.primaryDark,
-      tag: "Métricas",
     },
     {
       href: "/negocio/servicios" as const,
       title: "Servicios",
-      subtitle: "Catálogo de cortes, precios y duraciones",
       icon: "cut-outline" as const,
       iconColor: Palette.secondary,
       iconBg: Palette.secondaryDark,
-      tag: "Catálogo",
     },
     {
       href: "/negocio/horarios" as const,
       title: "Horarios y Disponibilidad",
-      subtitle: "Bloques de atención semanal y días de cierre o feriados",
       icon: "time-outline" as const,
       iconColor: Palette.primaryLight,
       iconBg: Palette.primaryDark,
-      tag: "Agenda",
     },
     {
       href: "/negocio/configuracion" as const,
       title: "Configuración General",
-      subtitle: "Nombre comercial, logo, teléfono e intervalo de turnos",
       icon: "settings-outline" as const,
       iconColor: Palette.secondaryLight,
       iconBg: Palette.surfaceContainerHigh,
-      tag: "Ajustes",
     },
     {
       href: "/negocio/whatsapp" as any,
       title: "Conexión de WhatsApp",
-      subtitle: "Estado del bot, vincular con código de 8 dígitos o QR",
       icon: "logo-whatsapp" as const,
       iconColor: "#25D366",
       iconBg: "rgba(37, 211, 102, 0.15)",
-      tag: "Bot",
     },
   ];
 
@@ -78,9 +68,6 @@ export default function NegocioScreen() {
           <View style={styles.headerTitleWrap}>
             <ThemedText style={styles.headerTitle}>
               Configuración
-            </ThemedText>
-            <ThemedText style={styles.headerSubtitle}>
-              Selecciona una opción para gestionar tu negocio:
             </ThemedText>
           </View>
 
@@ -112,10 +99,6 @@ export default function NegocioScreen() {
                       {item.title}
                     </ThemedText>
 
-                    <View style={styles.tagBadge}>
-                      <ThemedText style={styles.tagText}>{item.tag}</ThemedText>
-                    </View>
-
                     <Ionicons
                       name="chevron-forward"
                       size={18}
@@ -123,11 +106,6 @@ export default function NegocioScreen() {
                       style={styles.chevron}
                     />
                   </View>
-
-                  {/* Fila inferior: Descripción detallada */}
-                  <ThemedText style={styles.cardSubtitle}>
-                    {item.subtitle}
-                  </ThemedText>
                 </Pressable>
               </Link>
             ))}

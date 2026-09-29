@@ -6,7 +6,6 @@ import {
   useConfiguracionViewModel,
 } from "@/features/appointments";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
 import {
   ActivityIndicator,
   Image,
@@ -61,9 +60,6 @@ export default function ConfiguracionScreen() {
           {/* ENCABEZADO DE LA PANTALLA */}
           <View style={styles.header}>
             <ThemedText style={styles.title}>Configuración</ThemedText>
-            <ThemedText style={styles.subtitle}>
-              Personaliza el perfil, los turnos y las alertas automáticas de tu barbería
-            </ThemedText>
           </View>
 
           {/* BANNER DE ERROR (SI OCURRE) */}
@@ -89,9 +85,6 @@ export default function ConfiguracionScreen() {
               <Ionicons name="business-outline" size={18} color={Palette.primaryLight} />
               <ThemedText style={styles.sectionTitle}>Perfil del Negocio</ThemedText>
             </View>
-            <ThemedText style={styles.sectionDescription}>
-              Esta información se mostrará a los clientes en WhatsApp y en tus reservas.
-            </ThemedText>
 
             {/* SELECCIÓN Y VISTA PREVIA DEL LOGO */}
             <View style={styles.logoRow}>
@@ -113,9 +106,6 @@ export default function ConfiguracionScreen() {
 
               <View style={styles.logoInfo}>
                 <ThemedText style={styles.logoTitle}>Logo de la Barbería</ThemedText>
-                <ThemedText style={styles.logoSubtitle}>
-                  Toca para seleccionar una imagen cuadrada
-                </ThemedText>
               </View>
             </View>
 
@@ -324,18 +314,16 @@ export default function ConfiguracionScreen() {
               <Ionicons name="options-outline" size={18} color={Palette.primaryLight} />
               <ThemedText style={styles.sectionTitle}>Modo de Reserva</ThemedText>
             </View>
-            <ThemedText style={styles.sectionDescription}>
-              Elige si las reservas se agendan automáticamente o requieren tu aprobación.
-            </ThemedText>
 
             {business && (
               <View style={styles.modeOptionsContainer}>
                 {/* OPCIÓN: APROBACIÓN MANUAL */}
                 <Pressable
                   onPress={() => handleSelectMode("approval")}
-                  style={[
+                  style={({ pressed }) => [
                     styles.modeOptionCard,
                     business.booking_mode === "approval" && styles.modeOptionCardActive,
+                    pressed && styles.pressed,
                   ]}
                 >
                   <View style={styles.modeRadioRow}>
@@ -349,7 +337,12 @@ export default function ConfiguracionScreen() {
                         <View style={styles.radioInnerCircle} />
                       )}
                     </View>
-                    <ThemedText style={styles.modeOptionTitle}>
+                    <ThemedText
+                      style={[
+                        styles.modeOptionTitle,
+                        business.booking_mode === "approval" && styles.modeOptionTitleActive,
+                      ]}
+                    >
                       Manual
                     </ThemedText>
                   </View>
@@ -358,9 +351,10 @@ export default function ConfiguracionScreen() {
                 {/* OPCIÓN: CONFIRMACIÓN AUTOMÁTICA */}
                 <Pressable
                   onPress={() => handleSelectMode("auto")}
-                  style={[
+                  style={({ pressed }) => [
                     styles.modeOptionCard,
                     business.booking_mode === "auto" && styles.modeOptionCardActive,
+                    pressed && styles.pressed,
                   ]}
                 >
                   <View style={styles.modeRadioRow}>
@@ -374,7 +368,12 @@ export default function ConfiguracionScreen() {
                         <View style={styles.radioInnerCircle} />
                       )}
                     </View>
-                    <ThemedText style={styles.modeOptionTitle}>
+                    <ThemedText
+                      style={[
+                        styles.modeOptionTitle,
+                        business.booking_mode === "auto" && styles.modeOptionTitleActive,
+                      ]}
+                    >
                       Automática
                     </ThemedText>
                   </View>
@@ -391,9 +390,6 @@ export default function ConfiguracionScreen() {
               <Ionicons name="time-outline" size={18} color={Palette.primaryLight} />
               <ThemedText style={styles.sectionTitle}>Intervalo de Turnos</ThemedText>
             </View>
-            <ThemedText style={styles.sectionDescription}>
-              Frecuencia con la que se generan los horarios para citas.
-            </ThemedText>
 
             {business && (
               <View style={styles.intervalGrid}>
@@ -679,15 +675,18 @@ const styles = StyleSheet.create({
     color: "#ff5252",
   },
   modeOptionsContainer: {
+    flexDirection: "row",
     gap: Spacing.two,
   },
   modeOptionCard: {
+    flex: 1,
     backgroundColor: Palette.surfaceContainerHigh,
     borderWidth: 1,
     borderColor: Palette.borderSubtle,
     borderRadius: BorderRadius.md,
     padding: Spacing.three,
-    gap: Spacing.one,
+    alignItems: "center",
+    justifyContent: "center",
   },
   modeOptionCardActive: {
     borderColor: Palette.primary,
@@ -696,6 +695,7 @@ const styles = StyleSheet.create({
   modeRadioRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: Spacing.two,
   },
   radioCircle: {
@@ -720,6 +720,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: Palette.textPrimary,
+  },
+  modeOptionTitleActive: {
+    color: Palette.primaryLight,
   },
   intervalGrid: {
     flexDirection: "row",
