@@ -297,9 +297,25 @@ export default function WhatsAppConnectionScreen() {
                       <ThemedText style={styles.codeLabel}>
                         TU CÓDIGO DE VINCULACIÓN:
                       </ThemedText>
-                      <ThemedText selectable style={styles.codeValue}>
-                        {pairingCode}
-                      </ThemedText>
+                      {pairingCode.length === 8 ? (
+                        <View style={styles.codeRow}>
+                          <View style={styles.codeBlock}>
+                            <ThemedText selectable style={styles.codeValue}>
+                              {pairingCode.slice(0, 4)}
+                            </ThemedText>
+                          </View>
+                          <ThemedText style={styles.codeSeparator}>—</ThemedText>
+                          <View style={styles.codeBlock}>
+                            <ThemedText selectable style={styles.codeValue}>
+                              {pairingCode.slice(4)}
+                            </ThemedText>
+                          </View>
+                        </View>
+                      ) : (
+                        <ThemedText selectable style={styles.codeValue}>
+                          {pairingCode}
+                        </ThemedText>
+                      )}
                       <ThemedText style={styles.codeHint}>
                         Mantén presionado sobre el código para copiarlo.
                       </ThemedText>
@@ -622,13 +638,36 @@ const styles = StyleSheet.create({
     color: Palette.textMuted,
     marginBottom: 6,
   },
+  codeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginVertical: Spacing.two,
+    flexWrap: "nowrap",
+  },
+  codeBlock: {
+    backgroundColor: Palette.surfaceContainerHigh,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: "rgba(37, 211, 102, 0.3)",
+  },
   codeValue: {
-    fontSize: 32,
+    fontSize: 22,
     fontWeight: "900",
-    letterSpacing: 6,
+    letterSpacing: 4,
     fontFamily: "monospace",
     color: "#25D366",
-    marginVertical: 6,
+    lineHeight: 28,
+    textAlign: "center",
+  },
+  codeSeparator: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: Palette.textMuted,
+    lineHeight: 28,
   },
   codeHint: {
     fontSize: 11,
