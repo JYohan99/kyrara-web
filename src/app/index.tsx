@@ -233,14 +233,14 @@ export default function HomeScreen() {
                               style={({ pressed }) => [
                                 styles.bentoNoShowBtn,
                                 (completing || markingNoShow) && styles.btnDisabled,
-                                pressed && styles.pressed,
+                                pressed && styles.bentoNoShowBtnPressed,
                               ]}
                             >
                               {markingNoShow ? (
-                                <ActivityIndicator size="small" color={Palette.error} />
+                                <ActivityIndicator size="small" color="#f87171" />
                               ) : (
                                 <>
-                                  <Ionicons name="person-remove-outline" size={16} color={Palette.error} />
+                                  <Ionicons name="person-remove-outline" size={15} color="#f87171" />
                                   <ThemedText style={styles.bentoNoShowBtnText}>
                                     No presentado
                                   </ThemedText>
@@ -525,12 +525,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: Spacing.two,
+    width: "100%",
   },
   bentoActionButtonsWrap: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
     gap: Spacing.two,
-    flexWrap: "wrap",
   },
   bentoActionBtn: {
     flexDirection: "row",
@@ -549,18 +551,26 @@ const styles = StyleSheet.create({
   bentoNoShowBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 180, 171, 0.08)",
+    justifyContent: "center",
+    backgroundColor: "rgba(239, 68, 68, 0.08)",
     borderWidth: 1,
-    borderColor: "rgba(255, 180, 171, 0.25)",
-    paddingVertical: 10,
+    borderColor: "rgba(239, 68, 68, 0.28)",
+    paddingVertical: 9,
     paddingHorizontal: 14,
     borderRadius: BorderRadius.lg,
     gap: 6,
+    marginLeft: "auto",
+  },
+  bentoNoShowBtnPressed: {
+    backgroundColor: "rgba(239, 68, 68, 0.18)",
+    borderColor: "rgba(239, 68, 68, 0.5)",
+    transform: [{ scale: 0.98 }],
   },
   bentoNoShowBtnText: {
-    color: Palette.error,
-    fontSize: 14,
+    color: "#f87171",
+    fontSize: 13,
     fontWeight: "600",
+    letterSpacing: 0.2,
   },
   btnDisabled: {
     opacity: 0.6,
