@@ -61,11 +61,6 @@ export default function ServiciosScreen() {
       />
 
       <SafeAreaView edges={["bottom"]} style={styles.safeArea}>
-        {loading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Palette.secondary} />
-          </View>
-        )}
 
         {error && (
           <View style={styles.errorBanner}>
@@ -331,6 +326,15 @@ export default function ServiciosScreen() {
             </View>
           </View>
         </Modal>
+
+        {/* OVERLAY DE CARGA SEMI-TRANSPARENTE (SIN DESPLAZAMIENTO DE LISTA) */}
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <View style={styles.loadingBadge}>
+              <ActivityIndicator size="large" color={Palette.primary} />
+            </View>
+          </View>
+        )}
       </SafeAreaView>
     </ThemedView>
   );
@@ -346,10 +350,30 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     width: "100%",
     alignSelf: "center",
+    position: "relative",
   },
-  loadingContainer: {
-    paddingVertical: Spacing.six,
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(16, 20, 21, 0.55)",
+    justifyContent: "center",
     alignItems: "center",
+    zIndex: 99,
+  },
+  loadingBadge: {
+    backgroundColor: Palette.surfaceContainer,
+    padding: Spacing.four,
+    borderRadius: BorderRadius.card,
+    borderWidth: 1,
+    borderColor: Palette.borderSubtle,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   errorBanner: {
     flexDirection: "row",
