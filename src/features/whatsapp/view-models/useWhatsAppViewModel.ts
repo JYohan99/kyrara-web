@@ -41,7 +41,8 @@ export function useWhatsAppViewModel() {
   const [disconnecting, setDisconnecting] = useState(false);
 
   // Formulario y código
-  const [phone, setPhone] = useState(cachedPhone);
+  const [countryCode, setCountryCode] = useState("598");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"code" | "qr">("code");
@@ -61,20 +62,7 @@ export function useWhatsAppViewModel() {
   // CARGA INICIAL Y DATOS DEL NEGOCIO
   // --------------------------------------------------------------------------
   useEffect(() => {
-    // 1. Cargar número guardado del negocio si no está en caché
-    if (!cachedPhone) {
-      fetchBusiness()
-        .then((data) => {
-          if (data.business.phone) {
-            const clean = data.business.phone.replace(/[^0-9]/g, "");
-            cachedPhone = clean;
-            setPhone(clean);
-          }
-        })
-        .catch(() => {});
-    }
-
-    // 2. Cargar estado inicial de WhatsApp
+    // Cargar estado inicial de WhatsApp
     loadStatus().finally(() => setLoading(false));
 
     return () => {
@@ -104,31 +92,33 @@ export function useWhatsAppViewModel() {
   // GENERAR CÓDIGO DE 8 DÍGITOS
   // --------------------------------------------------------------------------
   const handleGeneratePairingCode = async () => {
-    let cleanNumber = phone.replace(/[^0-9]/g, "");
+    let cleanLocal = phoneNumber.replace(/[^0-9]/g, "");
+    let cleanCountry = countryCode.replace(/[^0-9]/g, "") || "598";
 
-    // Auto-formateo inteligente para números de Uruguay:
-    // 09X XXX XXX (9 dígitos) -> 5989X XXX XXX
-    if (cleanNumber.startsWith("09") && cleanNumber.length === 9) {
-      cleanNumber = "598" + cleanNumber.slice(1);
-    } else if (cleanNumber.startsWith("9") && cleanNumber.length === 8) {
-      // 9X XXX XXX (8 dígitos) -> 5989X XXX XXX
-      cleanNumber = "598" + cleanNumber;
+    // Si el usuario en Uruguay ingresa 09X XXX XXX (9 dígitos empezando en 0), quitamos el 0 inicial
+    if (cleanLocal.startsWith("0") && cleanLocal.length === 9) {
+      cleanLocal = cleanLocal.slice(1);
+    }
+    // Si el usuario por error volvió a incluir el código de país en el número local
+    if (cleanLocal.startsWith(cleanCountry)) {
+      cleanLocal = cleanLocal.slice(cleanCountry.length);
     }
 
-    if (cleanNumber.length < 10) {
+    const fullNumber = `${cleanCountry}${cleanLocal}`;
+
+    if (cleanLocal.length < 7 || fullNumber.length < 9) {
       showAlert(
         "Número incompleto",
-        "Por favor ingresa tu número con código de país (ej. 59893927667 o 093927667)."
+        "Por favor ingresa tu número de celular (ej. 099 123 456)."
       );
       return;
     }
 
-    setPhone(cleanNumber);
     setGeneratingCode(true);
     setPairingCode(null);
 
     try {
-      const res = await requestPairingCode(cleanNumber);
+      const res = await requestPairingCode(fullNumber);
       if (res.code) {
         setPairingCode(res.code);
       }
@@ -210,8 +200,12 @@ export function useWhatsAppViewModel() {
     loading,
     generatingCode,
     disconnecting,
-    phone,
-    setPhone,
+    countryCode,
+    setCountryCode,
+    phoneNumber,
+    setPhoneNumber,
+    phone: phoneNumber,
+    setPhone: setPhoneNumber,
     pairingCode,
     copied,
     activeTab,

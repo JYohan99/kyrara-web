@@ -34,6 +34,10 @@ export default function WhatsAppConnectionScreen() {
     disconnecting,
     phone,
     setPhone,
+    countryCode,
+    setCountryCode,
+    phoneNumber,
+    setPhoneNumber,
     pairingCode,
     copied,
     activeTab,
@@ -251,20 +255,40 @@ export default function WhatsAppConnectionScreen() {
                   </ThemedText>
 
                   <View style={styles.inputWrap}>
-                    <Ionicons
-                      name="call-outline"
-                      size={18}
-                      color={Palette.textMuted}
-                      style={styles.inputIcon}
-                    />
-                    <TextInput
-                      value={phone}
-                      onChangeText={setPhone}
-                      placeholder="Ej: 59899123456"
-                      placeholderTextColor={Palette.textMuted}
-                      keyboardType="phone-pad"
-                      style={styles.textInput}
-                    />
+                    {/* Código de país con espacio separado */}
+                    <View style={styles.countryCodeWrap}>
+                      <ThemedText style={styles.plusSign}>+</ThemedText>
+                      <TextInput
+                        value={countryCode}
+                        onChangeText={setCountryCode}
+                        placeholder="598"
+                        placeholderTextColor={Palette.textMuted}
+                        keyboardType="number-pad"
+                        maxLength={4}
+                        style={styles.countryCodeInput}
+                      />
+                    </View>
+
+                    {/* Línea divisoria muy fina */}
+                    <View style={styles.verticalDivider} />
+
+                    {/* Número de móvil */}
+                    <View style={styles.localNumberWrap}>
+                      <Ionicons
+                        name="call-outline"
+                        size={17}
+                        color={Palette.textMuted}
+                        style={styles.inputIcon}
+                      />
+                      <TextInput
+                        value={phoneNumber}
+                        onChangeText={setPhoneNumber}
+                        placeholder="099 123 456"
+                        placeholderTextColor={Palette.textMuted}
+                        keyboardType="phone-pad"
+                        style={styles.textInput}
+                      />
+                    </View>
                   </View>
 
                   <Pressable
@@ -564,6 +588,35 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.three,
     marginBottom: Spacing.three,
+  },
+  countryCodeWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingRight: 10,
+    gap: 2,
+  },
+  plusSign: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: Palette.textSecondary,
+  },
+  countryCodeInput: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: Palette.textPrimary,
+    minWidth: 32,
+    paddingVertical: 12,
+  },
+  verticalDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: Palette.borderSubtle,
+    marginRight: 10,
+  },
+  localNumberWrap: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
   },
   inputIcon: {
     marginRight: 8,
