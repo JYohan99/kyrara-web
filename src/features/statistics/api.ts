@@ -8,11 +8,13 @@ export async function fetchStatistics(params: {
   period: PeriodType;
   startDate?: string;
   endDate?: string;
+  month?: string;
 }): Promise<StatisticsData> {
   const query = new URLSearchParams();
   query.append("period", params.period);
   if (params.startDate) query.append("startDate", params.startDate);
   if (params.endDate) query.append("endDate", params.endDate);
+  if (params.month) query.append("month", params.month);
 
   const res = await fetch(`${API_BASE_URL}/appointments/statistics?${query.toString()}`);
   if (!res.ok) {

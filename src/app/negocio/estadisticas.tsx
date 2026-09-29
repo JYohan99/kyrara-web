@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -27,6 +28,71 @@ import {
   useEstadisticasViewModel,
 } from "@/features/statistics";
 
+const MONTH_NAMES_ES = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+];
+
+const MONTH_ABBR_ES = [
+  "ene", "feb", "mar", "abr", "may", "jun",
+  "jul", "ago", "sep", "oct", "nov", "dic"
+];
+
+interface MonthOption {
+  key: string;
+  year: number;
+  monthIndex: number;
+  label: string;
+  shortLabel: string;
+  isCurrent: boolean;
+}
+
+function getAvailableMonths(count = 18): MonthOption[] {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+
+  const list: MonthOption[] = [];
+  for (let i = 0; i < count; i++) {
+    const d = new Date(currentYear, currentMonth - i, 1);
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const key = `${y}-${String(m + 1).padStart(2, "0")}`;
+    const name = MONTH_NAMES_ES[m];
+    const isCurrent = i === 0;
+    const label = `${name} ${y}`;
+    const shortLabel = `${MONTH_ABBR_ES[m]} ${String(y).slice(-2)}`;
+    list.push({ key, year: y, monthIndex: m, label, shortLabel, isCurrent });
+  }
+  return list;
+}
+
+function formatBadgeDateRange(range?: string): string {
+  if (!range) return "";
+  let res = range;
+  res = res.replace(/\s+al\s+/gi, " - ");
+  res = res.replace(/\s+de\s+/gi, " ");
+  const monthsMap: Record<string, string> = {
+    enero: "ene",
+    febrero: "feb",
+    marzo: "mar",
+    abril: "abr",
+    mayo: "may",
+    junio: "jun",
+    julio: "jul",
+    agosto: "ago",
+    septiembre: "sep",
+    octubre: "oct",
+    noviembre: "nov",
+    diciembre: "dic",
+  };
+  for (const [full, abbr] of Object.entries(monthsMap)) {
+    const reg = new RegExp(`\\b${full}\\b`, "gi");
+    res = res.replace(reg, abbr);
+  }
+  return res.replace(/\s+/g, " ").trim();
+}
+
 export default function EstadisticasScreen() {
   const { width: windowWidth } = useWindowDimensions();
   const isMobile = windowWidth < 680;
@@ -34,6 +100,10 @@ export default function EstadisticasScreen() {
   const {
     period,
     selectPeriod,
+    selectedMonth,
+    selectMonth,
+    isMonthModalVisible,
+    setIsMonthModalVisible,
     customStart,
     setCustomStart,
     customEnd,
@@ -54,13 +124,13 @@ export default function EstadisticasScreen() {
   const [inputStart, setInputStart] = useState("");
   const [inputEnd, setInputEnd] = useState("");
 
-  const periodOptions: { key: PeriodType; label: string; icon: string }[] = [
-    { key: "today", label: "Hoy", icon: "sunny-outline" },
-    { key: "week", label: "Esta semana", icon: "calendar-outline" },
-    { key: "month", label: "Este mes", icon: "calendar" },
-    { key: "previous_month", label: "Mes anterior", icon: "time-outline" },
-    { key: "custom", label: "Personalizado", icon: "options-outline" },
-  ];
+  const availableMonths = useMemo(() => getAvailableMonths(18), []);
+  const selectedMonthObj =
+    availableMonths.find((m) => m.key === selectedMonth) || availableMonths[0];
+
+  const monthButtonText = isMobile
+    ? (selectedMonthObj.isCurrent ? "Mes" : selectedMonthObj.shortLabel)
+    : (selectedMonthObj.isCurrent ? "Este mes" : selectedMonthObj.label);
 
   const handleApplyCustom = () => {
     if (inputStart.trim() && inputEnd.trim()) {
@@ -100,11 +170,6 @@ export default function EstadisticasScreen() {
               <ThemedText style={styles.screenTitle}>
                 Estadísticas
               </ThemedText>
-              {!isMobile && (
-                <ThemedText style={styles.screenSubtitle}>
-                  Métricas comerciales, volumen de turnos y recaudación
-                </ThemedText>
-              )}
             </View>
 
             {data && (
@@ -115,54 +180,124 @@ export default function EstadisticasScreen() {
                   color={Palette.secondaryLight}
                 />
                 <ThemedText style={styles.dateRangeBadgeText} numberOfLines={1}>
-                  {data.currentRange.formattedRange}
+                  {formatBadgeDateRange(data.currentRange.formattedRange)}
                 </ThemedText>
               </View>
             )}
           </View>
 
-          {/* Selector de Período Horizontal Fijo */}
-          <View style={styles.periodSelectorWrapper}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.periodTabs}
+          {/* Barra de 4 botones de período fijos (sin scroll horizontal) */}
+          <View style={styles.periodTabsRow}>
+            {/* 1. Hoy */}
+            <Pressable
+              onPress={() => selectPeriod("today")}
+              style={({ pressed }) => [
+                styles.periodTab,
+                period === "today" && styles.periodTabActive,
+                pressed && styles.pressed,
+              ]}
             >
-              {periodOptions.map((opt) => {
-                const isActive = period === opt.key;
-                return (
-                  <Pressable
-                    key={opt.key}
-                    onPress={() => {
-                      if (opt.key === "custom" && !inputStart && data) {
-                        setInputStart(data.currentRange.startDate);
-                        setInputEnd(data.currentRange.endDate);
-                      }
-                      selectPeriod(opt.key);
-                    }}
-                    style={({ pressed }) => [
-                      styles.periodTab,
-                      isActive && styles.periodTabActive,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <Ionicons
-                      name={opt.icon as any}
-                      size={15}
-                      color={isActive ? Palette.primaryLight : Palette.textMuted}
-                    />
-                    <ThemedText
-                      style={[
-                        styles.periodTabText,
-                        isActive && styles.periodTabTextActive,
-                      ]}
-                    >
-                      {opt.label}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+              <Ionicons
+                name="today-outline"
+                size={14}
+                color={period === "today" ? Palette.primaryLight : Palette.textMuted}
+              />
+              <ThemedText
+                style={[
+                  styles.periodTabText,
+                  period === "today" && styles.periodTabTextActive,
+                ]}
+                numberOfLines={1}
+              >
+                Hoy
+              </ThemedText>
+            </Pressable>
+
+            {/* 2. Esta semana */}
+            <Pressable
+              onPress={() => selectPeriod("week")}
+              style={({ pressed }) => [
+                styles.periodTab,
+                period === "week" && styles.periodTabActive,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Ionicons
+                name="calendar-outline"
+                size={14}
+                color={period === "week" ? Palette.primaryLight : Palette.textMuted}
+              />
+              <ThemedText
+                style={[
+                  styles.periodTabText,
+                  period === "week" && styles.periodTabTextActive,
+                ]}
+                numberOfLines={1}
+              >
+                {isMobile ? "Semana" : "Esta semana"}
+              </ThemedText>
+            </Pressable>
+
+            {/* 3. Mes desplegable */}
+            <Pressable
+              onPress={() => setIsMonthModalVisible(true)}
+              style={({ pressed }) => [
+                styles.periodTab,
+                period === "month" && styles.periodTabActive,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Ionicons
+                name="calendar"
+                size={14}
+                color={period === "month" ? Palette.primaryLight : Palette.textMuted}
+              />
+              <ThemedText
+                style={[
+                  styles.periodTabText,
+                  period === "month" && styles.periodTabTextActive,
+                ]}
+                numberOfLines={1}
+              >
+                {monthButtonText}
+              </ThemedText>
+              <Ionicons
+                name="chevron-down"
+                size={11}
+                color={period === "month" ? Palette.primaryLight : Palette.textMuted}
+              />
+            </Pressable>
+
+            {/* 4. Personalizado */}
+            <Pressable
+              onPress={() => {
+                if (!inputStart && data) {
+                  setInputStart(data.currentRange.startDate);
+                  setInputEnd(data.currentRange.endDate);
+                }
+                selectPeriod("custom");
+              }}
+              style={({ pressed }) => [
+                styles.periodTab,
+                period === "custom" && styles.periodTabActive,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Ionicons
+                name="options-outline"
+                size={14}
+                color={period === "custom" ? Palette.primaryLight : Palette.textMuted}
+              />
+              <ThemedText
+                style={[
+                  styles.periodTabText,
+                  period === "custom" && styles.periodTabTextActive,
+                ]}
+                numberOfLines={1}
+              >
+                {isMobile ? "Rango" : "Personalizado"}
+              </ThemedText>
+            </Pressable>
           </View>
 
           {/* Formulario de Rango Personalizado */}
@@ -289,9 +424,7 @@ export default function EstadisticasScreen() {
                   <ThemedText style={styles.kpiValue}>
                     {data.metrics.totalReservations.current}
                   </ThemedText>
-                  <ThemedText style={styles.kpiDescription}>
-                    Total de reservas del período
-                  </ThemedText>
+
                   {/* Badge Comparativo */}
                   <View
                     style={[
@@ -345,9 +478,7 @@ export default function EstadisticasScreen() {
                   <ThemedText style={[styles.kpiValue, styles.kpiRevenueValue]}>
                     {formatCurrency(data.metrics.revenue.current)}
                   </ThemedText>
-                  <ThemedText style={styles.kpiDescription}>
-                    Suma de servicios completados
-                  </ThemedText>
+
                   {/* Badge Comparativo */}
                   <View
                     style={[
@@ -392,9 +523,7 @@ export default function EstadisticasScreen() {
                   <ThemedText style={styles.kpiValue}>
                     {data.metrics.completed.count}
                   </ThemedText>
-                  <ThemedText style={styles.kpiDescription}>
-                    Turnos efectivamente realizados
-                  </ThemedText>
+
                   <View style={styles.rateBadge}>
                     <ThemedText style={styles.rateBadgeText}>
                       {data.metrics.completed.rate}% efectividad
@@ -424,9 +553,7 @@ export default function EstadisticasScreen() {
                   <ThemedText style={styles.kpiValue}>
                     {data.metrics.newCustomers.current}
                   </ThemedText>
-                  <ThemedText style={styles.kpiDescription}>
-                    Registrados por primera vez
-                  </ThemedText>
+
                   <View
                     style={[
                       styles.comparisonBadge,
@@ -470,9 +597,7 @@ export default function EstadisticasScreen() {
                   <ThemedText style={[styles.kpiValue, { color: Palette.error }]}>
                     {data.metrics.cancelled.count}
                   </ThemedText>
-                  <ThemedText style={styles.kpiDescription}>
-                    Turnos cancelados
-                  </ThemedText>
+
                   <View style={[styles.rateBadge, styles.rateBadgeError]}>
                     <ThemedText
                       style={[styles.rateBadgeText, { color: Palette.error }]}
@@ -504,9 +629,7 @@ export default function EstadisticasScreen() {
                   >
                     {data.metrics.noShow.count}
                   </ThemedText>
-                  <ThemedText style={styles.kpiDescription}>
-                    Clientes que no se presentaron
-                  </ThemedText>
+
                   <View style={[styles.rateBadge, styles.rateBadgeWarning]}>
                     <ThemedText
                       style={[
@@ -517,24 +640,6 @@ export default function EstadisticasScreen() {
                       {data.metrics.noShow.rate}% no presentados
                     </ThemedText>
                   </View>
-                </View>
-              </View>
-
-              {/* Aclaración de Ingresos */}
-              <View style={styles.disclaimerCard}>
-                <Ionicons
-                  name="information-circle-outline"
-                  size={18}
-                  color={Palette.secondaryLight}
-                />
-                <View style={styles.disclaimerContent}>
-                  <ThemedText style={styles.disclaimerTitle}>
-                    Cálculo de Ingresos
-                  </ThemedText>
-                  <ThemedText style={styles.disclaimerText}>
-                    {data.revenueDisclaimer} Los turnos cancelados o no
-                    presentados no se contabilizan como dinero generado.
-                  </ThemedText>
                 </View>
               </View>
 
@@ -939,6 +1044,132 @@ export default function EstadisticasScreen() {
             </View>
           )}
         </ScrollView>
+
+        {/* Modal Desplegable para Selección de Mes */}
+        <Modal
+          visible={isMonthModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsMonthModalVisible(false)}
+        >
+          <Pressable
+            style={styles.modalOverlay}
+            onPress={() => setIsMonthModalVisible(false)}
+          >
+            <Pressable
+              style={styles.monthModalCard}
+              onPress={(e) => e.stopPropagation()}
+            >
+              {/* Cabecera del Modal */}
+              <View style={styles.monthModalHeader}>
+                <View style={styles.monthModalTitleRow}>
+                  <View style={styles.monthModalIconWrap}>
+                    <Ionicons
+                      name="calendar"
+                      size={18}
+                      color={Palette.primaryLight}
+                    />
+                  </View>
+                  <View>
+                    <ThemedText style={styles.monthModalTitle}>
+                      Seleccionar Mes
+                    </ThemedText>
+                    <ThemedText style={styles.monthModalSubtitle}>
+                      Consulta estadísticas de este mes o meses anteriores
+                    </ThemedText>
+                  </View>
+                </View>
+                <Pressable
+                  onPress={() => setIsMonthModalVisible(false)}
+                  style={({ pressed }) => [
+                    styles.modalCloseBtn,
+                    pressed && styles.pressed,
+                  ]}
+                  hitSlop={8}
+                >
+                  <Ionicons name="close" size={20} color={Palette.textMuted} />
+                </Pressable>
+              </View>
+
+              {/* Lista Scrollable de Meses */}
+              <ScrollView
+                style={styles.monthListScroll}
+                showsVerticalScrollIndicator={true}
+              >
+                {availableMonths.map((item) => {
+                  const isSelected =
+                    period === "month" && selectedMonth === item.key;
+                  return (
+                    <Pressable
+                      key={item.key}
+                      onPress={() => {
+                        selectMonth(item.key);
+                        setIsMonthModalVisible(false);
+                      }}
+                      style={({ pressed }) => [
+                        styles.monthItemRow,
+                        isSelected && styles.monthItemRowSelected,
+                        pressed && styles.pressed,
+                      ]}
+                    >
+                      <View style={styles.monthItemLeft}>
+                        <Ionicons
+                          name={
+                            isSelected ? "checkmark-circle" : "calendar-outline"
+                          }
+                          size={18}
+                          color={
+                            isSelected
+                              ? Palette.primaryLight
+                              : Palette.textMuted
+                          }
+                        />
+                        <ThemedText
+                          style={[
+                            styles.monthItemText,
+                            isSelected && styles.monthItemTextSelected,
+                          ]}
+                        >
+                          {item.label}
+                        </ThemedText>
+                        {item.isCurrent && (
+                          <View style={styles.currentMonthBadge}>
+                            <ThemedText style={styles.currentMonthBadgeText}>
+                              Actual
+                            </ThemedText>
+                          </View>
+                        )}
+                      </View>
+
+                      {isSelected && (
+                        <Ionicons
+                          name="checkmark"
+                          size={18}
+                          color={Palette.primaryLight}
+                        />
+                      )}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+
+              {/* Footer con botón de cerrar */}
+              <View style={styles.monthModalFooter}>
+                <Pressable
+                  onPress={() => setIsMonthModalVisible(false)}
+                  style={({ pressed }) => [
+                    styles.monthModalCloseBtn,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <ThemedText style={styles.monthModalCloseBtnText}>
+                    Cerrar
+                  </ThemedText>
+                </Pressable>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
       </SafeAreaView>
     </ThemedView>
   );
@@ -1003,37 +1234,40 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
     borderWidth: 1,
     borderColor: Palette.borderSubtle,
-    maxWidth: "58%",
+    flexShrink: 0,
   },
   dateRangeBadgeText: {
     fontSize: 11,
     fontWeight: "600",
     color: Palette.secondaryLight,
   },
-  periodSelectorWrapper: {
-    marginHorizontal: -Spacing.four,
-  },
-  periodTabs: {
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.two,
-  },
-  periodTab: {
+  periodTabsRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    width: "100%",
+  },
+  periodTab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+    paddingVertical: 8,
+    paddingHorizontal: 2,
     borderRadius: BorderRadius.pill,
     backgroundColor: Palette.surfaceContainer,
     borderWidth: 1,
     borderColor: Palette.borderSubtle,
+    minHeight: 36,
   },
   periodTabActive: {
     backgroundColor: Palette.primaryDark,
     borderColor: Palette.primaryDim,
   },
   periodTabText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
     color: Palette.textMuted,
   },
@@ -1607,5 +1841,127 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.75,
     transform: [{ scale: 0.98 }],
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.four,
+  },
+  monthModalCard: {
+    backgroundColor: Palette.surfaceContainer,
+    borderRadius: BorderRadius.card,
+    borderWidth: 1,
+    borderColor: Palette.borderSubtle,
+    width: "100%",
+    maxWidth: 420,
+    maxHeight: "80%",
+    padding: Spacing.four,
+    gap: Spacing.three,
+  },
+  monthModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingBottom: Spacing.two,
+    borderBottomWidth: 1,
+    borderBottomColor: Palette.borderSubtle,
+  },
+  monthModalTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+    flex: 1,
+  },
+  monthModalIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(138, 79, 255, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  monthModalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: Palette.textPrimary,
+  },
+  monthModalSubtitle: {
+    fontSize: 11,
+    color: Palette.textMuted,
+  },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Palette.surfaceContainerHigh,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  monthListScroll: {
+    maxHeight: 320,
+  },
+  monthItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: BorderRadius.md,
+    marginVertical: 2,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  monthItemRowSelected: {
+    backgroundColor: "rgba(138, 79, 255, 0.12)",
+    borderColor: Palette.primary,
+  },
+  monthItemLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flex: 1,
+  },
+  monthItemText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: Palette.textPrimary,
+  },
+  monthItemTextSelected: {
+    color: Palette.primaryLight,
+    fontWeight: "700",
+  },
+  currentMonthBadge: {
+    backgroundColor: "rgba(0, 210, 255, 0.15)",
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: "rgba(0, 210, 255, 0.3)",
+  },
+  currentMonthBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Palette.secondaryLight,
+  },
+  monthModalFooter: {
+    paddingTop: Spacing.two,
+    borderTopWidth: 1,
+    borderTopColor: Palette.borderSubtle,
+  },
+  monthModalCloseBtn: {
+    backgroundColor: Palette.surfaceContainerHigh,
+    paddingVertical: 10,
+    borderRadius: BorderRadius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: Palette.borderSubtle,
+  },
+  monthModalCloseBtnText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: Palette.textPrimary,
   },
 });

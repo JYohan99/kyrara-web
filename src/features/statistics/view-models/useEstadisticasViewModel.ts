@@ -12,6 +12,12 @@ export function formatCurrency(amount: number): string {
 
 export function useEstadisticasViewModel() {
   const [period, setPeriodState] = useState<PeriodType>("month");
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const [isMonthModalVisible, setIsMonthModalVisible] = useState(false);
+
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [showCustomRangeInput, setShowCustomRangeInput] = useState(false);
@@ -28,7 +34,8 @@ export function useEstadisticasViewModel() {
       targetPeriod: PeriodType = period,
       tStart?: string,
       tEnd?: string,
-      isRefresh = false
+      isRefresh = false,
+      tMonth?: string
     ) => {
       if (isRefresh) {
         setRefreshing(true);
@@ -42,6 +49,7 @@ export function useEstadisticasViewModel() {
           period: targetPeriod,
           startDate: targetPeriod === "custom" ? (tStart || customStart) : undefined,
           endDate: targetPeriod === "custom" ? (tEnd || customEnd) : undefined,
+          month: targetPeriod === "month" ? (tMonth || selectedMonth) : undefined,
         });
         setData(result);
         if (targetPeriod === "custom") {
@@ -64,11 +72,11 @@ export function useEstadisticasViewModel() {
         setRefreshing(false);
       }
     },
-    [period, customStart, customEnd, selectedDay]
+    [period, customStart, customEnd, selectedDay, selectedMonth]
   );
 
   useEffect(() => {
-    loadData(period);
+    loadData(period, customStart, customEnd, false, selectedMonth);
   }, [period]);
 
   const selectPeriod = (newPeriod: PeriodType) => {
@@ -81,6 +89,13 @@ export function useEstadisticasViewModel() {
     }
   };
 
+  const selectMonth = (monthStr: string) => {
+    setSelectedMonth(monthStr);
+    setShowCustomRangeInput(false);
+    setPeriodState("month");
+    loadData("month", undefined, undefined, false, monthStr);
+  };
+
   const applyCustomRange = (start: string, end: string) => {
     setCustomStart(start);
     setCustomEnd(end);
@@ -89,12 +104,17 @@ export function useEstadisticasViewModel() {
   };
 
   const onRefresh = () => {
-    loadData(period, customStart, customEnd, true);
+    loadData(period, customStart, customEnd, true, selectedMonth);
   };
 
   return {
     period,
     selectPeriod,
+    selectedMonth,
+    setSelectedMonth,
+    selectMonth,
+    isMonthModalVisible,
+    setIsMonthModalVisible,
     customStart,
     setCustomStart,
     customEnd,
