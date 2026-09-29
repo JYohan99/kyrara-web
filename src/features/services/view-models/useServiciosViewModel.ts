@@ -89,30 +89,33 @@ export function useServiciosViewModel() {
     }
   };
 
+  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
+
+  const requestDelete = (service: Service) => {
+    setModalVisible(false);
+    setServiceToDelete(service);
+  };
+
+  const cancelDelete = () => {
+    setServiceToDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!serviceToDelete) return;
+    setDeleting(true);
+    try {
+      await deleteService(serviceToDelete.id);
+      setServiceToDelete(null);
+      load();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleDelete = (service: Service) => {
-    Alert.alert(
-      "Eliminar servicio",
-      `¿Estás seguro de que deseas eliminar "${service.name}"? Los turnos históricos asociados a este servicio se conservarán intactos.`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            setDeleting(true);
-            try {
-              await deleteService(service.id);
-              closeModal();
-              load();
-            } catch (e: any) {
-              setError(e.message);
-            } finally {
-              setDeleting(false);
-            }
-          },
-        },
-      ],
-    );
+    requestDelete(service);
   };
 
   return {
@@ -126,6 +129,7 @@ export function useServiciosViewModel() {
     price,
     saving,
     deleting,
+    serviceToDelete,
     setName,
     setDuration,
     setPrice,
@@ -135,5 +139,8 @@ export function useServiciosViewModel() {
     handleSave,
     handleToggle,
     handleDelete,
+    requestDelete,
+    cancelDelete,
+    confirmDelete,
   };
 }

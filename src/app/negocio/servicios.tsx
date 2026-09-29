@@ -34,6 +34,7 @@ export default function ServiciosScreen() {
     price,
     saving,
     deleting,
+    serviceToDelete,
     setName,
     setDuration,
     setPrice,
@@ -43,6 +44,8 @@ export default function ServiciosScreen() {
     handleSave,
     handleToggle,
     handleDelete,
+    cancelDelete,
+    confirmDelete,
   } = useServiciosViewModel();
 
   return (
@@ -77,11 +80,11 @@ export default function ServiciosScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <Pressable
-              onPress={() => openEdit(item)}
-              style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-            >
-              <View style={styles.infoColumn}>
+            <View style={styles.card}>
+              <Pressable
+                onPress={() => openEdit(item)}
+                style={({ pressed }) => [styles.infoColumn, pressed && styles.pressed]}
+              >
                 <ThemedText
                   style={[
                     styles.serviceName,
@@ -107,7 +110,7 @@ export default function ServiciosScreen() {
                     </View>
                   )}
                 </View>
-              </View>
+              </Pressable>
 
               <View style={styles.cardActions}>
                 <Switch
@@ -120,17 +123,14 @@ export default function ServiciosScreen() {
                   thumbColor="#ffffff"
                 />
                 <Pressable
-                  onPress={(e) => {
-                    e.stopPropagation?.();
-                    handleDelete(item);
-                  }}
+                  onPress={() => handleDelete(item)}
                   style={({ pressed }) => [styles.deleteCardBtn, pressed && styles.pressed]}
                   hitSlop={8}
                 >
                   <Ionicons name="trash-outline" size={18} color={Palette.error} />
                 </Pressable>
               </View>
-            </Pressable>
+            </View>
           )}
           ListEmptyComponent={
             !loading ? (
@@ -268,6 +268,65 @@ export default function ServiciosScreen() {
                     )}
                   </Pressable>
                 </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* MODAL DE CONFIRMACIÓN DE ELIMINAR */}
+        <Modal
+          visible={!!serviceToDelete}
+          animationType="fade"
+          transparent
+          onRequestClose={cancelDelete}
+        >
+          <View style={styles.confirmModalOverlay}>
+            <View style={styles.confirmModalCard}>
+              <View style={styles.confirmIconWrap}>
+                <Ionicons name="trash-outline" size={28} color={Palette.error} />
+              </View>
+
+              <ThemedText style={styles.confirmModalTitle}>
+                Eliminar servicio
+              </ThemedText>
+
+              <ThemedText style={styles.confirmModalDesc}>
+                ¿Estás seguro de que deseas eliminar{" "}
+                <ThemedText style={styles.confirmServiceName}>
+                  "{serviceToDelete?.name}"
+                </ThemedText>
+                ? Los turnos históricos asociados a este servicio se conservarán intactos.
+              </ThemedText>
+
+              <View style={styles.confirmModalActions}>
+                <Pressable
+                  onPress={cancelDelete}
+                  style={({ pressed }) => [
+                    styles.confirmCancelBtn,
+                    pressed && styles.pressed,
+                  ]}
+                  disabled={deleting}
+                >
+                  <ThemedText style={styles.cancelBtnText}>Cancelar</ThemedText>
+                </Pressable>
+
+                <Pressable
+                  onPress={confirmDelete}
+                  style={({ pressed }) => [
+                    styles.confirmDeleteBtn,
+                    deleting && styles.btnDisabled,
+                    pressed && styles.pressed,
+                  ]}
+                  disabled={deleting}
+                >
+                  {deleting ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <ThemedText style={styles.confirmDeleteBtnText}>
+                      Sí, eliminar
+                    </ThemedText>
+                  )}
+                </Pressable>
               </View>
             </View>
           </View>
@@ -527,5 +586,75 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.75,
   },
+  confirmModalOverlay: {
+    flex: 1,
+    backgroundColor: "#000000aa",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.four,
+  },
+  confirmModalCard: {
+    backgroundColor: Palette.surfaceContainer,
+    borderRadius: BorderRadius.card,
+    borderWidth: 1,
+    borderColor: Palette.borderSubtle,
+    padding: Spacing.four,
+    maxWidth: 400,
+    width: "100%",
+    alignItems: "center",
+    gap: Spacing.three,
+  },
+  confirmIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Palette.errorContainer,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  confirmModalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: Palette.textPrimary,
+    textAlign: "center",
+  },
+  confirmModalDesc: {
+    fontSize: 14,
+    color: Palette.textMuted,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  confirmServiceName: {
+    color: Palette.textPrimary,
+    fontWeight: "700",
+  },
+  confirmModalActions: {
+    flexDirection: "row",
+    gap: Spacing.two,
+    width: "100%",
+    marginTop: Spacing.one,
+  },
+  confirmCancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Palette.surfaceContainerHigh,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  confirmDeleteBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Palette.error,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  confirmDeleteBtnText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "700",
+  },
 });
+
 
