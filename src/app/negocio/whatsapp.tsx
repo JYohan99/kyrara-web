@@ -14,6 +14,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -265,6 +266,7 @@ export default function WhatsAppConnectionScreen() {
                         placeholderTextColor={Palette.textMuted}
                         keyboardType="number-pad"
                         maxLength={4}
+                        selectTextOnFocus
                         style={styles.countryCodeInput}
                       />
                     </View>
@@ -592,7 +594,7 @@ const styles = StyleSheet.create({
   countryCodeWrap: {
     flexDirection: "row",
     alignItems: "center",
-    paddingRight: 10,
+    flexShrink: 0,
     gap: 2,
   },
   plusSign: {
@@ -604,28 +606,35 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: Palette.textPrimary,
-    minWidth: 32,
+    width: 42,
     paddingVertical: 12,
+    paddingHorizontal: 0,
+    ...(Platform.OS === "web" ? ({ outlineStyle: "none" } as any) : {}),
   },
   verticalDivider: {
     width: 1,
     height: 24,
     backgroundColor: Palette.borderSubtle,
-    marginRight: 10,
+    marginHorizontal: 12,
+    flexShrink: 0,
   },
   localNumberWrap: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
+    minWidth: 0,
   },
   inputIcon: {
     marginRight: 8,
+    flexShrink: 0,
   },
   textInput: {
     flex: 1,
     height: 48,
     color: Palette.textPrimary,
     fontSize: 15,
+    paddingHorizontal: 0,
+    ...(Platform.OS === "web" ? ({ outlineStyle: "none" } as any) : {}),
   },
   btnPrimary: {
     flexDirection: "row",
