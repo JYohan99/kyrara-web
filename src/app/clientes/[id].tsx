@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { LoadingOverlay } from "@/components/loading-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import {
@@ -73,11 +74,6 @@ export default function CustomerDetailScreen() {
       />
 
       <SafeAreaView edges={["bottom"]} style={styles.safeArea}>
-        {loading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Palette.primary} />
-          </View>
-        )}
 
         {error && (
           <View style={styles.errorBanner}>
@@ -268,6 +264,8 @@ export default function CustomerDetailScreen() {
             </View>
           </View>
         </Modal>
+
+        <LoadingOverlay visible={loading} />
       </SafeAreaView>
     </ThemedView>
   );
@@ -283,6 +281,7 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     width: "100%",
     alignSelf: "center",
+    position: "relative",
   },
   deleteHeaderBtn: {
     width: 36,
@@ -294,10 +293,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: 4,
-  },
-  loadingContainer: {
-    paddingVertical: Spacing.six,
-    alignItems: "center",
   },
   errorBanner: {
     flexDirection: "row",

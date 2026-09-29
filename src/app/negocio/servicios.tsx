@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { LoadingOverlay } from "@/components/loading-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import {
@@ -327,14 +328,7 @@ export default function ServiciosScreen() {
           </View>
         </Modal>
 
-        {/* OVERLAY DE CARGA SEMI-TRANSPARENTE (SIN DESPLAZAMIENTO DE LISTA) */}
-        {loading && (
-          <View style={styles.loadingOverlay}>
-            <View style={styles.loadingBadge}>
-              <ActivityIndicator size="large" color={Palette.primary} />
-            </View>
-          </View>
-        )}
+        <LoadingOverlay visible={loading} />
       </SafeAreaView>
     </ThemedView>
   );
@@ -351,29 +345,6 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "center",
     position: "relative",
-  },
-  loadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(16, 20, 21, 0.55)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 99,
-  },
-  loadingBadge: {
-    backgroundColor: Palette.surfaceContainer,
-    padding: Spacing.four,
-    borderRadius: BorderRadius.card,
-    borderWidth: 1,
-    borderColor: Palette.borderSubtle,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
   errorBanner: {
     flexDirection: "row",

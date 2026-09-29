@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { LoadingOverlay } from "@/components/loading-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { BorderRadius, MaxContentWidth, Palette, Spacing } from "@/constants/theme";
@@ -76,12 +77,6 @@ export default function ReservasScreen() {
                 ? "1 reserva programada"
                 : `${appointments.length} reservas programadas`}
             </ThemedText>
-          </View>
-        )}
-
-        {loading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Palette.secondary} />
           </View>
         )}
 
@@ -202,6 +197,8 @@ export default function ReservasScreen() {
         >
           <Ionicons name="add" size={28} color="#ffffff" />
         </Pressable>
+
+        <LoadingOverlay visible={loading} color={Palette.secondary} />
       </SafeAreaView>
     </ThemedView>
   );
@@ -217,6 +214,7 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     width: "100%",
     alignSelf: "center",
+    position: "relative",
   },
   header: {
     flexDirection: "row",

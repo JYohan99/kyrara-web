@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { LoadingOverlay } from "@/components/loading-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import {
@@ -78,11 +79,6 @@ export default function HorariosScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {loading && (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Palette.secondary} />
-            </View>
-          )}
 
           {error && (
             <View style={styles.errorBanner}>
@@ -456,6 +452,8 @@ export default function HorariosScreen() {
             </View>
           </Modal>
         </ScrollView>
+
+        <LoadingOverlay visible={loading} color={Palette.secondary} />
       </SafeAreaView>
     </ThemedView>
   );
@@ -471,15 +469,12 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     width: "100%",
     alignSelf: "center",
+    position: "relative",
   },
   scrollContent: {
     padding: Spacing.four,
     gap: Spacing.five,
     paddingBottom: 60,
-  },
-  loadingContainer: {
-    paddingVertical: Spacing.six,
-    alignItems: "center",
   },
   errorBanner: {
     flexDirection: "row",

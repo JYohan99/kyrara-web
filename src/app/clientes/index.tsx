@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { LoadingOverlay } from "@/components/loading-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import {
@@ -80,12 +81,6 @@ export default function ClientesScreen() {
                 ? "1 cliente registrado"
                 : `${customers.length} clientes registrados`}
             </ThemedText>
-          </View>
-        )}
-
-        {loading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Palette.primary} />
           </View>
         )}
 
@@ -244,6 +239,8 @@ export default function ClientesScreen() {
             </View>
           </View>
         </Modal>
+
+        <LoadingOverlay visible={loading} />
       </SafeAreaView>
     </ThemedView>
   );
@@ -259,6 +256,7 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     width: "100%",
     alignSelf: "center",
+    position: "relative",
   },
   searchContainer: {
     flexDirection: "row",

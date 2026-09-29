@@ -1,3 +1,4 @@
+import { LoadingOverlay } from "@/components/loading-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { BorderRadius, MaxContentWidth, Palette, Spacing } from "@/constants/theme";
@@ -67,13 +68,6 @@ export default function ConfiguracionScreen() {
             <View style={styles.errorBanner}>
               <Ionicons name="alert-circle-outline" size={18} color={Palette.error} />
               <ThemedText style={styles.errorText}>{error}</ThemedText>
-            </View>
-          )}
-
-          {/* INDICADOR DE CARGA INICIAL */}
-          {loading && (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Palette.primary} />
             </View>
           )}
 
@@ -416,6 +410,8 @@ export default function ConfiguracionScreen() {
             )}
           </View>
         </ScrollView>
+
+        <LoadingOverlay visible={loading} />
       </SafeAreaView>
     </ThemedView>
   );
@@ -435,6 +431,7 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     width: "100%",
     alignSelf: "center",
+    position: "relative",
   },
   scrollContent: {
     padding: Spacing.four,
@@ -453,10 +450,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Palette.textMuted,
     marginTop: Spacing.one,
-  },
-  loadingContainer: {
-    paddingVertical: Spacing.six,
-    alignItems: "center",
   },
   errorBanner: {
     flexDirection: "row",
