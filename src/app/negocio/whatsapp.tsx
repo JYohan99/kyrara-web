@@ -1,3 +1,4 @@
+import { LoadingOverlay } from "@/components/loading-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import {
@@ -45,6 +46,8 @@ export default function WhatsAppConnectionScreen() {
     handleLogout,
   } = useWhatsAppViewModel();
 
+  const isChecking = loading && status === null;
+
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen
@@ -68,7 +71,9 @@ export default function WhatsAppConnectionScreen() {
                 style={[
                   styles.iconCircle,
                   {
-                    backgroundColor: isConnected
+                    backgroundColor: isChecking
+                      ? "rgba(255, 255, 255, 0.08)"
+                      : isConnected
                       ? "rgba(37, 211, 102, 0.15)"
                       : "rgba(245, 158, 11, 0.15)",
                   },
@@ -77,14 +82,22 @@ export default function WhatsAppConnectionScreen() {
                 <Ionicons
                   name="logo-whatsapp"
                   size={24}
-                  color={isConnected ? "#25D366" : Palette.warning}
+                  color={
+                    isChecking
+                      ? Palette.textMuted
+                      : isConnected
+                      ? "#25D366"
+                      : Palette.warning
+                  }
                 />
               </View>
 
               <View style={styles.cardTitleWrap}>
                 <ThemedText style={styles.cardTitle}>Bot de WhatsApp</ThemedText>
                 <ThemedText style={styles.cardSubtitle}>
-                  {isConnected
+                  {isChecking
+                    ? "Comprobando estado de la conexión..."
+                    : isConnected
                     ? "Conectado y listo para recibir reservas"
                     : "Desconectado — requiere vinculación"}
                 </ThemedText>
@@ -93,7 +106,9 @@ export default function WhatsAppConnectionScreen() {
               <View
                 style={[
                   styles.statusBadge,
-                  isConnected
+                  isChecking
+                    ? styles.badgeChecking
+                    : isConnected
                     ? styles.badgeConnected
                     : styles.badgeDisconnected,
                 ]}
@@ -102,7 +117,9 @@ export default function WhatsAppConnectionScreen() {
                   style={[
                     styles.statusDot,
                     {
-                      backgroundColor: isConnected
+                      backgroundColor: isChecking
+                        ? Palette.textMuted
+                        : isConnected
                         ? "#25D366"
                         : Palette.warning,
                     },
@@ -112,12 +129,16 @@ export default function WhatsAppConnectionScreen() {
                   style={[
                     styles.statusText,
                     {
-                      color: isConnected ? "#25D366" : Palette.warningLight,
+                      color: isChecking
+                        ? Palette.textMuted
+                        : isConnected
+                        ? "#25D366"
+                        : Palette.warningLight,
                     },
                   ]}
                 >
-                  {loading
-                    ? "Cargando..."
+                  {isChecking
+                    ? "Comprobando..."
                     : isConnected
                     ? "Conectado"
                     : "Pendiente"}
@@ -126,7 +147,7 @@ export default function WhatsAppConnectionScreen() {
             </View>
 
             {/* BOTÓN DE DESCONEXIÓN SI YA ESTÁ VINCULADO */}
-            {isConnected && (
+            {!isChecking && isConnected && (
               <View style={styles.connectedActionWrap}>
                 <Pressable
                   onPress={handleLogout}
@@ -158,7 +179,7 @@ export default function WhatsAppConnectionScreen() {
           {/* ================================================================ */}
           {/* SI ESTÁ DESCONECTADO: SECCIÓN DE VINCULACIÓN                      */}
           {/* ================================================================ */}
-          {!isConnected && (
+          {!isChecking && !isConnected && (
             <>
               {/* SELECTOR DE PESTAÑAS: CÓDIGO VS QR */}
               <View style={styles.tabContainer}>
@@ -383,6 +404,8 @@ export default function WhatsAppConnectionScreen() {
             </>
           )}
         </ScrollView>
+
+        <LoadingOverlay visible={isChecking} message="Comprobando conexión..." />
       </SafeAreaView>
     </ThemedView>
   );
@@ -448,6 +471,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: BorderRadius.pill,
     borderWidth: 1,
+  },
+  badgeChecking: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderColor: Palette.borderSubtle,
   },
   badgeConnected: {
     backgroundColor: "rgba(37, 211, 102, 0.12)",

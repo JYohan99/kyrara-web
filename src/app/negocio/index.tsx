@@ -1,8 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Link, Stack } from "expo-router";
-import { Pressable, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import {
@@ -11,8 +6,18 @@ import {
   Palette,
   Spacing,
 } from "@/constants/theme";
+import { prefetchWhatsAppStatus } from "@/features/whatsapp";
+import { Ionicons } from "@expo/vector-icons";
+import { Link, Stack } from "expo-router";
+import React, { useEffect } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NegocioScreen() {
+  useEffect(() => {
+    prefetchWhatsAppStatus();
+  }, []);
+
   const menuItems = [
     {
       href: "/negocio/estadisticas" as const,

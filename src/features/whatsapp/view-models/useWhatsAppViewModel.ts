@@ -22,14 +22,26 @@ function showAlert(title: string, message?: string) {
   }
 }
 
+// Cache en memoria a nivel de módulo para evitar parpadeos visuales al navegar
+let cachedWhatsAppStatus: WhatsAppStatus | null = null;
+let cachedPhone = "";
+
+export function prefetchWhatsAppStatus() {
+  fetchWhatsAppStatus()
+    .then((s) => {
+      cachedWhatsAppStatus = s;
+    })
+    .catch(() => {});
+}
+
 export function useWhatsAppViewModel() {
-  const [status, setStatus] = useState<WhatsAppStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<WhatsAppStatus | null>(cachedWhatsAppStatus);
+  const [loading, setLoading] = useState(cachedWhatsAppStatus === null);
   const [generatingCode, setGeneratingCode] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
 
   // Formulario y código
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(cachedPhone);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"code" | "qr">("code");
@@ -40,6 +52,7 @@ export function useWhatsAppViewModel() {
   const loadStatus = async () => {
     try {
       const s = await fetchWhatsAppStatus();
+      cachedWhatsAppStatus = s;
       setStatus(s);
     } catch {}
   };
@@ -48,15 +61,18 @@ export function useWhatsAppViewModel() {
   // CARGA INICIAL Y DATOS DEL NEGOCIO
   // --------------------------------------------------------------------------
   useEffect(() => {
-    // 1. Cargar número guardado del negocio si existe
-    fetchBusiness()
-      .then((data) => {
-        if (data.business.phone) {
-          const clean = data.business.phone.replace(/[^0-9]/g, "");
-          setPhone(clean);
-        }
-      })
-      .catch(() => {});
+    // 1. Cargar número guardado del negocio si no está en caché
+    if (!cachedPhone) {
+      fetchBusiness()
+        .then((data) => {
+          if (data.business.phone) {
+            const clean = data.business.phone.replace(/[^0-9]/g, "");
+            cachedPhone = clean;
+            setPhone(clean);
+          }
+        })
+        .catch(() => {});
+    }
 
     // 2. Cargar estado inicial de WhatsApp
     loadStatus().finally(() => setLoading(false));
@@ -152,6 +168,7 @@ export function useWhatsAppViewModel() {
     try {
       await logoutWhatsApp();
       setPairingCode(null);
+      cachedWhatsAppStatus = null;
       await loadStatus();
     } catch {
       showAlert("Error", "No se pudo desconectar la sesión.");
