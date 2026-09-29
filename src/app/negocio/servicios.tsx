@@ -323,7 +323,7 @@ export default function ServiciosScreen() {
                     <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
                     <ThemedText style={styles.confirmDeleteBtnText}>
-                      Sí, eliminar
+                      Aceptar
                     </ThemedText>
                   )}
                 </Pressable>
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: BorderRadius.lg,
-    backgroundColor: Palette.error,
+    backgroundColor: "#dc2626",
     alignItems: "center",
     justifyContent: "center",
   },
