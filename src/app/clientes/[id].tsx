@@ -143,11 +143,15 @@ export default function CustomerDetailScreen() {
 
         {/* Sección de Historial de reservas */}
         <View style={styles.sectionHeaderWrap}>
-          <Ionicons name="calendar-outline" size={16} color={Palette.secondary} />
-          <ThemedText style={styles.sectionTitle}>Historial de Reservas</ThemedText>
+          <View style={styles.sectionHeaderLeft}>
+            <Ionicons name="calendar-outline" size={16} color={Palette.secondary} />
+            <ThemedText style={styles.sectionTitle}>Historial de Reservas</ThemedText>
+          </View>
           <View style={styles.countBadge}>
             <ThemedText style={styles.countBadgeText}>
-              {customer?.appointments?.length ?? 0}
+              {`${customer?.appointments?.length ?? 0} ${
+                (customer?.appointments?.length ?? 0) === 1 ? "cita" : "citas"
+              }`}
             </ThemedText>
           </View>
         </View>
@@ -422,8 +426,13 @@ const styles = StyleSheet.create({
   sectionHeaderWrap: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: Spacing.four,
     paddingBottom: Spacing.two,
+  },
+  sectionHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   sectionTitle: {
@@ -435,16 +444,15 @@ const styles = StyleSheet.create({
   },
   countBadge: {
     backgroundColor: Palette.surfaceContainerHigh,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
     borderRadius: BorderRadius.pill,
     borderWidth: 1,
     borderColor: Palette.borderSubtle,
-    marginLeft: 2,
   },
   countBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
+    fontSize: 12,
+    fontWeight: "600",
     color: Palette.secondary,
   },
   historyListContent: {
