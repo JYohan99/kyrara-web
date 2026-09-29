@@ -33,6 +33,7 @@ export default function ServiciosScreen() {
     duration,
     price,
     saving,
+    deleting,
     setName,
     setDuration,
     setPrice,
@@ -41,6 +42,7 @@ export default function ServiciosScreen() {
     closeModal,
     handleSave,
     handleToggle,
+    handleDelete,
   } = useServiciosViewModel();
 
   return (
@@ -107,15 +109,27 @@ export default function ServiciosScreen() {
                 </View>
               </View>
 
-              <Switch
-                value={!!item.active}
-                onValueChange={() => handleToggle(item)}
-                trackColor={{
-                  false: Palette.surfaceContainerHighest,
-                  true: Palette.primary,
-                }}
-                thumbColor="#ffffff"
-              />
+              <View style={styles.cardActions}>
+                <Switch
+                  value={!!item.active}
+                  onValueChange={() => handleToggle(item)}
+                  trackColor={{
+                    false: Palette.surfaceContainerHighest,
+                    true: Palette.primary,
+                  }}
+                  thumbColor="#ffffff"
+                />
+                <Pressable
+                  onPress={(e) => {
+                    e.stopPropagation?.();
+                    handleDelete(item);
+                  }}
+                  style={({ pressed }) => [styles.deleteCardBtn, pressed && styles.pressed]}
+                  hitSlop={8}
+                >
+                  <Ionicons name="trash-outline" size={18} color={Palette.error} />
+                </Pressable>
+              </View>
             </Pressable>
           )}
           ListEmptyComponent={
@@ -155,9 +169,21 @@ export default function ServiciosScreen() {
                 <ThemedText style={styles.modalTitle}>
                   {editing ? "Editar Servicio" : "Nuevo Servicio"}
                 </ThemedText>
-                <Pressable onPress={closeModal} hitSlop={8}>
-                  <Ionicons name="close" size={24} color={Palette.textMuted} />
-                </Pressable>
+                <View style={styles.modalHeaderActions}>
+                  {editing && (
+                    <Pressable
+                      onPress={() => handleDelete(editing)}
+                      style={({ pressed }) => [styles.deleteHeaderBtn, pressed && styles.pressed]}
+                      hitSlop={8}
+                      disabled={deleting || saving}
+                    >
+                      <Ionicons name="trash-outline" size={20} color={Palette.error} />
+                    </Pressable>
+                  )}
+                  <Pressable onPress={closeModal} hitSlop={8}>
+                    <Ionicons name="close" size={24} color={Palette.textMuted} />
+                  </Pressable>
+                </View>
               </View>
 
               <View style={styles.formGroup}>
@@ -198,29 +224,50 @@ export default function ServiciosScreen() {
               </View>
 
               <View style={styles.modalActions}>
-                <Pressable
-                  onPress={closeModal}
-                  style={({ pressed }) => [styles.cancelBtn, pressed && styles.pressed]}
-                >
-                  <ThemedText style={styles.cancelBtnText}>Cancelar</ThemedText>
-                </Pressable>
-                <Pressable
-                  onPress={handleSave}
-                  style={({ pressed }) => [
-                    styles.saveBtn,
-                    saving && styles.btnDisabled,
-                    pressed && styles.pressed,
-                  ]}
-                  disabled={saving}
-                >
-                  {saving ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <ThemedText style={styles.saveBtnText}>
-                      {editing ? "Guardar Cambios" : "Crear Servicio"}
-                    </ThemedText>
-                  )}
-                </Pressable>
+                {editing ? (
+                  <Pressable
+                    onPress={() => handleDelete(editing)}
+                    style={({ pressed }) => [styles.deleteModalBtn, pressed && styles.pressed]}
+                    disabled={deleting || saving}
+                  >
+                    {deleting ? (
+                      <ActivityIndicator size="small" color={Palette.error} />
+                    ) : (
+                      <>
+                        <Ionicons name="trash-outline" size={16} color={Palette.error} />
+                        <ThemedText style={styles.deleteModalBtnText}>Eliminar</ThemedText>
+                      </>
+                    )}
+                  </Pressable>
+                ) : (
+                  <View />
+                )}
+
+                <View style={styles.modalRightActions}>
+                  <Pressable
+                    onPress={closeModal}
+                    style={({ pressed }) => [styles.cancelBtn, pressed && styles.pressed]}
+                  >
+                    <ThemedText style={styles.cancelBtnText}>Cancelar</ThemedText>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleSave}
+                    style={({ pressed }) => [
+                      styles.saveBtn,
+                      (saving || deleting) && styles.btnDisabled,
+                      pressed && styles.pressed,
+                    ]}
+                    disabled={saving || deleting}
+                  >
+                    {saving ? (
+                      <ActivityIndicator size="small" color="#ffffff" />
+                    ) : (
+                      <ThemedText style={styles.saveBtnText}>
+                        {editing ? "Guardar Cambios" : "Crear Servicio"}
+                      </ThemedText>
+                    )}
+                  </Pressable>
+                </View>
               </View>
             </View>
           </View>
@@ -407,12 +454,50 @@ const styles = StyleSheet.create({
     color: Palette.textPrimary,
     fontSize: 15,
   },
+  cardActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+  },
+  deleteCardBtn: {
+    padding: 6,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Palette.surfaceContainerHigh,
+  },
+  modalHeaderActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.three,
+  },
+  deleteHeaderBtn: {
+    padding: 4,
+  },
   modalActions: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
+    alignItems: "center",
     gap: Spacing.two,
     marginTop: Spacing.two,
     paddingBottom: Spacing.two,
+  },
+  deleteModalBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.three,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Palette.errorContainer,
+  },
+  deleteModalBtnText: {
+    color: Palette.error,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  modalRightActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
   },
   cancelBtn: {
     paddingVertical: 12,
@@ -443,3 +528,4 @@ const styles = StyleSheet.create({
     opacity: 0.75,
   },
 });
+

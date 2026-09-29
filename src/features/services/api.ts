@@ -43,3 +43,13 @@ export async function toggleServiceActive(id: string): Promise<Service> {
   if (!res.ok) throw new Error("No se pudo cambiar el estado del servicio");
   return res.json();
 }
+
+export async function deleteService(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/services/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok && res.status !== 204) {
+    throw new Error("No se pudo eliminar el servicio");
+  }
+}
+

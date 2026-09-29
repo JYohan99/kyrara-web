@@ -1,7 +1,9 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
+import { Alert } from "react-native";
 import {
   createService,
+  deleteService,
   listServices,
   toggleServiceActive,
   updateService,
@@ -19,6 +21,7 @@ export function useServiciosViewModel() {
   const [duration, setDuration] = useState("");
   const [price, setPrice] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -86,6 +89,32 @@ export function useServiciosViewModel() {
     }
   };
 
+  const handleDelete = (service: Service) => {
+    Alert.alert(
+      "Eliminar servicio",
+      `¿Estás seguro de que deseas eliminar "${service.name}"? Los turnos históricos asociados a este servicio se conservarán intactos.`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await deleteService(service.id);
+              closeModal();
+              load();
+            } catch (e: any) {
+              setError(e.message);
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   return {
     services,
     loading,
@@ -96,6 +125,7 @@ export function useServiciosViewModel() {
     duration,
     price,
     saving,
+    deleting,
     setName,
     setDuration,
     setPrice,
@@ -104,5 +134,6 @@ export function useServiciosViewModel() {
     closeModal,
     handleSave,
     handleToggle,
+    handleDelete,
   };
 }
